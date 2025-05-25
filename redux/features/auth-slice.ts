@@ -4,12 +4,15 @@ import type { LoginResponseDto, UserDto } from "@/types/auth"
 type AuthState = {
   user: UserDto | null
   token: string | null
+  refreshToken: string | null
   isAuthenticated: boolean
+
 }
 
 const initialState: AuthState = {
   user: null,
   token: null,
+  refreshToken: null,
   isAuthenticated: false,
 }
 
@@ -31,6 +34,7 @@ export const auth = createSlice({
       state.user = action.payload
     },
   },
+  
 })
 
 export const { login, logout, updateUser } = auth.actions
