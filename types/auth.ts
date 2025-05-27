@@ -1,3 +1,5 @@
+import { ApiResponse } from "./ApiResponse"
+
 export interface UserDto {
   id?: number
   username: string
@@ -15,9 +17,12 @@ export interface LoginRequestDto {
 
 export interface LoginResponseDto {
   token: string
-  refreshToken: string
+  refreshToken?: string
   user: UserDto
 }
+
+// this is the actual api response wrapped in api response...i use this for centralized the api response in all returning in the api-service
+export interface LoginApiResponse extends ApiResponse<LoginResponseDto> {}
 
 export interface RegisterRequestDto {
   username: string

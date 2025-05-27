@@ -2,10 +2,12 @@ export interface ApiResponse<T = any> {
     success: boolean;
     status: number;
     result: string;
-    data: unknown;
+    data?: T;
     desc?: string;
 
     message?: string;
     error?: string;
     code?: number;
+
+    [key: string]: unknown;
 }

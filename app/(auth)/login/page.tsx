@@ -43,7 +43,7 @@ export default function LoginPage() {
       console.log(values);
       
       const result = await dispatch(loginUserAPI(values)).unwrap();
-      console.log(result);
+      console.log("success result",result);
     },
     [dispatch]
   );

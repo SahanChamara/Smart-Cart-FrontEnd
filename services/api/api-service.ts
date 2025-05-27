@@ -48,7 +48,7 @@ class ApiService {
 
             return {
                 ...response.data,
-                desc: response.data.desc || response.data.result,
+                desc: response.data.desc ?? response.data.result,
                 status: response?.status || 0
             };
         } catch (error: any) {
@@ -57,7 +57,7 @@ class ApiService {
                     success: false,
                     status: 2,
                     result: "Your Connection was interrupted",
-                    data: null,
+                    data: undefined,
                 };
             }
 
@@ -69,7 +69,7 @@ class ApiService {
                     success: false,
                     status: 2,
                     result: "Your session expired! Please Login again...",
-                    data: null,
+                    data: undefined,
                 }
             }
             if (error.response.status === 403) {
@@ -77,7 +77,7 @@ class ApiService {
                     success: false,
                     status: 2,
                     result: "Access is denied.",
-                    data: null
+                    data: undefined
                 };
             }
 
@@ -86,7 +86,7 @@ class ApiService {
                     success: false,
                     status: 2,
                     result: "Oops! Something went wrong.",
-                    data: null
+                    data: undefined
                 };
             }
 
@@ -94,8 +94,8 @@ class ApiService {
                 return {
                     success: false,
                     status: 0,
-                    result: error.response.data.result || 'Sorry, something went wrong',
-                    data: null
+                    result: error.response.data.result ?? 'Sorry, something went wrong',
+                    data: undefined
                 };
             }
 
@@ -103,7 +103,7 @@ class ApiService {
                 success: false,
                 status: 2,
                 result: "Sorry, something went wrong.",
-                data: null
+                data: undefined
             };
         }
     }
