@@ -7,67 +7,49 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { useToast } from "@/components/ui/use-toast"
-import { login } from "@/redux/features/authSlice"
+// import { login } from "@/redux/features/authSlice"
 import { useAppDispatch } from "@/redux/hooks"
 import type { LoginRequestDto } from "@/types/auth"
 import { useRouter } from "next/navigation"
-import { useState } from "react"
+import { useCallback, useMemo, useState } from "react"
+import * as Yup from "yup";
+import {useFormik} from "formik";
 
 export default function LoginPage() {
-  const [formData, setFormData] = useState<LoginRequestDto>({
+/*   const [formData, setFormData] = useState<LoginRequestDto>({
     username: "",
     password: "",
-  })
+  }) */
   const [isLoading, setIsLoading] = useState(false)
   const { toast } = useToast()
   const router = useRouter()
   const dispatch = useAppDispatch()
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const LoginSchema = useMemo(() => {
+    Yup.object<LoginRequestDto>().shape({
+      userName: Yup.string().required("user name is required"),
+      password: Yup.string().min(2, "password is must be at least 2 characters").required("password is required"),
+    })
+  }, [])
+
+/*   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target
     setFormData((prev) => ({ ...prev, [name]: value }))
-  }
+  } */
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setIsLoading(true)
+  const handleSubmit = useCallback(() => {
+    
+  },[])
 
-    try {
-      // In a real app, this would be an API call
-      // For demo purposes, we'll simulate a successful login
-      setTimeout(() => {
-        dispatch(
-          login({
-            token: "sample-token",
-            user: {
-              id: 1,
-              username: formData.username,
-              fullName: "Demo User",
-              email: "demo@example.com",
-              phoneNumber: "+94712345678",
-              role: "ADMIN",
-              active: true,
-            },
-          }),
-        )
 
-        toast({
-          title: "Login successful",
-          description: "Welcome back to the POS system",
-        })
-
-        router.push("/dashboard")
-      }, 1000)
-    } catch (error) {
-      toast({
-        variant: "destructive",
-        title: "Login failed",
-        description: "Please check your credentials and try again",
-      })
-    } finally {
-      setIsLoading(false)
-    }
-  }
+  const formik = useFormik<LoginRequestDto>({
+    initialValues: {
+      username: "",
+      password: "",
+    },
+    validationSchema: LoginSchema,
+    onSubmit: handleSubmit
+  })
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-gray-50 px-4 py-12 dark:bg-gray-900">
@@ -76,7 +58,7 @@ export default function LoginPage() {
           <CardTitle className="text-2xl font-bold">Sign in</CardTitle>
           <CardDescription>Enter your credentials to access your account</CardDescription>
         </CardHeader>
-        <form onSubmit={handleSubmit}>
+        <form onSubmit={formik.handleSubmit}>
           <CardContent className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="username">Username</Label>
@@ -85,8 +67,8 @@ export default function LoginPage() {
                 name="username"
                 placeholder="Enter your username"
                 required
-                value={formData.username}
-                onChange={handleChange}
+                value={formik.values.username}
+                onChange={formik.handleChange}
               />
             </div>
             <div className="space-y-2">
@@ -102,8 +84,8 @@ export default function LoginPage() {
                 type="password"
                 placeholder="Enter your password"
                 required
-                value={formData.password}
-                onChange={handleChange}
+                value={formik.values.password}
+                onChange={formik.handleChange}
               />
             </div>
           </CardContent>
