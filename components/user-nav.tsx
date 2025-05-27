@@ -11,7 +11,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import { logout } from "@/redux/features/auth-slice"
+import { logout } from "@/redux/features/authSlice"
 import { useAppDispatch, useAppSelector } from "@/redux/hooks"
 import { useRouter } from "next/navigation"
 

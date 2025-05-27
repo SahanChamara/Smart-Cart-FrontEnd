@@ -3,7 +3,7 @@ import { SERVER_URL } from "./constants";
 import { headers } from 'next/headers';
 import { UserDto } from '@/types/auth';
 import { store } from '@/redux/store';
-import { logout } from '@/redux/features/auth-slice';
+import { logout } from '@/redux/features/authSlice';
 import Swal from 'sweetalert2';
 
 const API_BASE_URL = SERVER_URL;

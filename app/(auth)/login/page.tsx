@@ -7,7 +7,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { useToast } from "@/components/ui/use-toast"
-import { login } from "@/redux/features/auth-slice"
+import { login } from "@/redux/features/authSlice"
 import { useAppDispatch } from "@/redux/hooks"
 import type { LoginRequestDto } from "@/types/auth"
 import { useRouter } from "next/navigation"
