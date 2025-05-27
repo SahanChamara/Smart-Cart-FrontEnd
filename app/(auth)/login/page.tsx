@@ -1,46 +1,52 @@
-"use client"
+"use client";
 
-import type React from "react"
+import type React from "react";
 
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { useToast } from "@/components/ui/use-toast"
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { useToast } from "@/components/ui/use-toast";
 // import { login } from "@/redux/features/authSlice"
-import { useAppDispatch } from "@/redux/hooks"
-import type { LoginRequestDto } from "@/types/auth"
-import { useRouter } from "next/navigation"
-import { useCallback, useMemo, useState } from "react"
+import { useAppDispatch } from "@/redux/hooks";
+import type { LoginRequestDto } from "@/types/auth";
+import { useRouter } from "next/navigation";
+import { useCallback, useMemo, useState } from "react";
 import * as Yup from "yup";
-import {useFormik} from "formik";
+import { useFormik } from "formik";
+import { loginUserAPI } from "@/redux/features/authSlice";
 
 export default function LoginPage() {
-/*   const [formData, setFormData] = useState<LoginRequestDto>({
-    username: "",
-    password: "",
-  }) */
-  const [isLoading, setIsLoading] = useState(false)
-  const { toast } = useToast()
-  const router = useRouter()
-  const dispatch = useAppDispatch()
+  const [isLoading, setIsLoading] = useState(false);
+  const { toast } = useToast();
+  const router = useRouter();
+  const dispatch = useAppDispatch();
 
   const LoginSchema = useMemo(() => {
     Yup.object<LoginRequestDto>().shape({
       userName: Yup.string().required("user name is required"),
-      password: Yup.string().min(2, "password is must be at least 2 characters").required("password is required"),
-    })
-  }, [])
+      password: Yup.string()
+        .min(2, "password is must be at least 2 characters")
+        .required("password is required"),
+    });
+  }, []);
 
-/*   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target
-    setFormData((prev) => ({ ...prev, [name]: value }))
-  } */
-
-  const handleSubmit = useCallback(() => {
-    
-  },[])
-
+  const handleSubmit = useCallback(
+    async (values: LoginRequestDto) => {
+      console.log(values);
+      
+      const result = await dispatch(loginUserAPI(values)).unwrap();
+      console.log(result);
+    },
+    [dispatch]
+  );
 
   const formik = useFormik<LoginRequestDto>({
     initialValues: {
@@ -48,15 +54,17 @@ export default function LoginPage() {
       password: "",
     },
     validationSchema: LoginSchema,
-    onSubmit: handleSubmit
-  })
+    onSubmit: handleSubmit,
+  });
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-gray-50 px-4 py-12 dark:bg-gray-900">
       <Card className="w-full max-w-md">
         <CardHeader className="space-y-1">
           <CardTitle className="text-2xl font-bold">Sign in</CardTitle>
-          <CardDescription>Enter your credentials to access your account</CardDescription>
+          <CardDescription>
+            Enter your credentials to access your account
+          </CardDescription>
         </CardHeader>
         <form onSubmit={formik.handleSubmit}>
           <CardContent className="space-y-4">
@@ -74,7 +82,11 @@ export default function LoginPage() {
             <div className="space-y-2">
               <div className="flex items-center justify-between">
                 <Label htmlFor="password">Password</Label>
-                <Button variant="link" className="h-auto p-0 text-sm" type="button">
+                <Button
+                  variant="link"
+                  className="h-auto p-0 text-sm"
+                  type="button"
+                >
                   Forgot password?
                 </Button>
               </div>
@@ -86,6 +98,7 @@ export default function LoginPage() {
                 required
                 value={formik.values.password}
                 onChange={formik.handleChange}
+                onBlur={formik.handleBlur}
               />
             </div>
           </CardContent>
@@ -97,5 +110,5 @@ export default function LoginPage() {
         </form>
       </Card>
     </div>
-  )
+  );
 }
