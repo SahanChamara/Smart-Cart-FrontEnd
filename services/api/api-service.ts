@@ -68,7 +68,7 @@ class ApiService {
                 return {
                     success: false,
                     status: 2,
-                    result: "Your session expired! Please Login again...",
+                    result: "Your session expired or invalid Credentials! Please Login again...",
                     data: undefined,
                 }
             }

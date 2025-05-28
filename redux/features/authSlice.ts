@@ -36,10 +36,10 @@ export const loginUserAPI = createAsyncThunk<
 >("loginUserAPI", async (credentials: LoginRequestDto, { rejectWithValue }) => {
   try {
     const response = await loginUser(credentials);
-    console.log(response);
-    console.log(response.data);
+    console.log("Login Response ->> ",response);
 
     if (response.success && response.data) {
+      localStorage.setItem("secure_access", response.data.token);
       return response.data;
     }
 

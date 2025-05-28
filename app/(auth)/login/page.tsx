@@ -40,10 +40,10 @@ export default function LoginPage() {
 
   const handleSubmit = useCallback(
     async (values: LoginRequestDto) => {
-      console.log(values);
-      
       const result = await dispatch(loginUserAPI(values)).unwrap();
-      console.log("success result",result);
+      if (result.user && result.token) {
+        router.push("/dashboard");
+      }
     },
     [dispatch]
   );
