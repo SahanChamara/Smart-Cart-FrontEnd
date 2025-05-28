@@ -36,7 +36,13 @@ class ApiService {
         }
 
         const prefix = apiObject.prefix;
-        const url = `${serverUrl}/${basePath}${prefix ? '/' + prefix : ''}/${apiObject.endpoint}`;
+        let url = "";
+        
+        if(apiObject.endpoint == ""){
+            url = `${serverUrl}/${basePath}${prefix ? '/' + prefix : ''}`;
+        }else{
+            url = `${serverUrl}/${basePath}${prefix ? '/' + prefix : ''}/${apiObject.endpoint}`;
+        }
 
         try {
             const response = await axiosApiClient({

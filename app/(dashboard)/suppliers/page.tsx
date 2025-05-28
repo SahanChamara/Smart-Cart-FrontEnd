@@ -5,48 +5,29 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/ui/input"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import type { SupplierDto } from "@/types/supplier"
-import { useState } from "react"
+import { useCallback, useEffect, useState } from "react"
 import { Search, Plus, Edit, Trash2, Mail, Phone } from "lucide-react"
 import { SupplierDialog } from "@/components/supplier-dialog"
+import { useAppDispatch, useAppSelector } from "@/redux/hooks"
+import { getAllSuppliersAPI } from "@/redux/features/supplierSlice"
 
 export default function SuppliersPage() {
   const [searchTerm, setSearchTerm] = useState("")
   const [isDialogOpen, setIsDialogOpen] = useState(false)
   const [selectedSupplier, setSelectedSupplier] = useState<SupplierDto | null>(null)
+  const [suppliers, setSuppliers] = useState<SupplierDto[]>([]);
 
-  // Mock data for demonstration
-  const [suppliers, setSuppliers] = useState<SupplierDto[]>([
-    {
-      id: 1,
-      name: "Dairy Farms Ltd",
-      contactNumber: "0712345678",
-      email: "contact@dairyfarms.com",
-    },
-    {
-      id: 2,
-      name: "Bakery Supplies Co",
-      contactNumber: "0723456789",
-      email: "info@bakerysupplies.com",
-    },
-    {
-      id: 3,
-      name: "Beverage Distributors",
-      contactNumber: "0734567890",
-      email: "orders@beveragedist.com",
-    },
-    {
-      id: 4,
-      name: "Grain Wholesalers",
-      contactNumber: "0745678901",
-      email: "sales@grainwholesalers.com",
-    },
-    {
-      id: 5,
-      name: "Sweet Treats Inc",
-      contactNumber: "0756789012",
-      email: "support@sweettreats.com",
-    },
-  ])
+  const dispatch = useAppDispatch();
+  const suppliersData: SupplierDto[] = useAppSelector((state) => state.supplier.suppliersData) || [];
+
+  // Get All Suppliers
+  useEffect(() => {
+    dispatch(getAllSuppliersAPI());
+  },[dispatch])
+
+  useEffect(() => {
+    setSuppliers(suppliersData)
+  },[suppliersData])
 
   const filteredSuppliers = suppliers.filter(
     (supplier) =>
@@ -65,7 +46,7 @@ export default function SuppliersPage() {
   }
 
   const handleSaveSupplier = (supplier: SupplierDto) => {
-    if (supplier.id) {
+    if (supplier.id) {      
       // Update existing supplier
       setSuppliers(suppliers.map((s) => (s.id === supplier.id ? supplier : s)))
     } else {

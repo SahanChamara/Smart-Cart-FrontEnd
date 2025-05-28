@@ -4,19 +4,19 @@ import { SupplierDto } from "@/types/supplier";
 import { createAsyncThunk, createSlice, PayloadAction } from "@reduxjs/toolkit";
 
 type SupplierState = {
-  supplier: SupplierDto | null;
+  suppliersData: SupplierDto[] | null;
   loading: boolean;
   error: string | undefined;
 };
 
 const initialState: SupplierState = {
-  supplier: null,
+  suppliersData: [],
   loading: false,
   error: undefined,
 };
 
 export const getAllSuppliersAPI = createAsyncThunk<
-  ApiResponse<SupplierDto>,
+  ApiResponse<SupplierDto[]>,
   void,
   {
     rejectValue: {
@@ -38,26 +38,24 @@ export const getAllSuppliersAPI = createAsyncThunk<
 });
 
 const supplierSlice = createSlice({
-  name: "suppliersSlice",
+  name: "supplierSlice",
   initialState,
   reducers: {
-    resetData: (state) => {
-      state.supplier = null;
-    },
+    resetData: (state) => {},
   },
   extraReducers: (builder) => {
     builder
     .addCase(getAllSuppliersAPI.pending, (state) => {
       state.loading = true;
     })
-    .addCase(getAllSuppliersAPI.fulfilled, (state, action: PayloadAction<ApiResponse<SupplierDto>>) => {
+    .addCase(getAllSuppliersAPI.fulfilled, (state, action: PayloadAction<ApiResponse<SupplierDto[]>>) => {
         state.loading = false;
-        state.supplier = action.payload.data ?? null;
+        state.suppliersData = action.payload?.data ?? null;
         state.error = undefined;
     })
     .addCase(getAllSuppliersAPI.rejected, (state, action ) => {
         state.loading = true;
-        state.error = action.payload?.error ?? undefined;
+        state.error = action.payload?.error ?? undefined;        
     })
   },
 });
