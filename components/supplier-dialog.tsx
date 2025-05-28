@@ -40,7 +40,7 @@ export function SupplierDialog({ open, onOpenChange, supplier, onSave }: Supplie
         email: "",
       })
     }
-  }, [supplier, open])
+  }, [supplier])
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target

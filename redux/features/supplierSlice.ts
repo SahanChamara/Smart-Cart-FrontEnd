@@ -1,10 +1,11 @@
-import { getAllSuppliers } from "@/services/supplierService";
+import { getAllSuppliers, addSupplier } from "@/services/supplierService";
 import { ApiResponse } from "@/types/ApiResponse";
 import { SupplierDto } from "@/types/supplier";
 import { createAsyncThunk, createSlice, PayloadAction } from "@reduxjs/toolkit";
+import { string } from "yup";
 
 type SupplierState = {
-  suppliersData: SupplierDto[] | null;
+  suppliersData: SupplierDto[];
   loading: boolean;
   error: string | undefined;
 };
@@ -15,6 +16,7 @@ const initialState: SupplierState = {
   error: undefined,
 };
 
+// Get All Suppliers
 export const getAllSuppliersAPI = createAsyncThunk<
   ApiResponse<SupplierDto[]>,
   void,
@@ -37,6 +39,29 @@ export const getAllSuppliersAPI = createAsyncThunk<
   }
 });
 
+//Add New Suppliers
+export const addSupplierAPI = createAsyncThunk<
+  ApiResponse<SupplierDto>,
+  SupplierDto,
+  {
+    rejectValue: {
+      message: string;
+      error: string;
+    };
+  }
+>("addSupplierAPI", async (newSupplier, { rejectWithValue }) => {
+  try {
+    const result = await addSupplier(newSupplier);
+    console.log("new Supplier Add Response", result);
+    return result;
+  } catch (error: any) {
+    return rejectWithValue({
+      message: "Failed to Add suppliers",
+      error: error?.message ?? "Unknown error",
+    });
+  }
+});
+
 const supplierSlice = createSlice({
   name: "supplierSlice",
   initialState,
@@ -45,18 +70,42 @@ const supplierSlice = createSlice({
   },
   extraReducers: (builder) => {
     builder
-    .addCase(getAllSuppliersAPI.pending, (state) => {
-      state.loading = true;
-    })
-    .addCase(getAllSuppliersAPI.fulfilled, (state, action: PayloadAction<ApiResponse<SupplierDto[]>>) => {
-        state.loading = false;
-        state.suppliersData = action.payload?.data ?? null;
-        state.error = undefined;
-    })
-    .addCase(getAllSuppliersAPI.rejected, (state, action ) => {
+      .addCase(getAllSuppliersAPI.pending, (state) => {
         state.loading = true;
-        state.error = action.payload?.error ?? undefined;        
-    })
+      })
+      .addCase(
+        getAllSuppliersAPI.fulfilled,
+        (state, action: PayloadAction<ApiResponse<SupplierDto[]>>) => {
+          state.loading = false;
+          state.suppliersData = action.payload?.data ?? [];
+          state.error = undefined;
+        }
+      )
+      .addCase(getAllSuppliersAPI.rejected, (state, action) => {
+        state.loading = true;
+        state.error = action.payload?.error ?? undefined;
+      })
+
+      .addCase(addSupplierAPI.pending, (state) => {
+        state.loading = true;
+      })
+      .addCase(
+        addSupplierAPI.fulfilled,
+        (state, action: PayloadAction<ApiResponse<SupplierDto>>) => {
+          state.loading = false;
+          // state.suppliersData = action.payload.data ?? null;
+          if (action.payload.data) {
+            state.suppliersData = state.suppliersData
+              ? [...state.suppliersData, action.payload.data]
+              : [action.payload.data];
+          }
+          state.error = undefined;
+        }
+      )
+      .addCase(addSupplierAPI.rejected, (state, action) => {
+        state.loading = true;
+        state.error = action.payload?.error;
+      });
   },
 });
 

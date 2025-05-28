@@ -1,64 +1,92 @@
-"use client"
+"use client";
 
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Input } from "@/components/ui/input"
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import type { SupplierDto } from "@/types/supplier"
-import { useCallback, useEffect, useState } from "react"
-import { Search, Plus, Edit, Trash2, Mail, Phone } from "lucide-react"
-import { SupplierDialog } from "@/components/supplier-dialog"
-import { useAppDispatch, useAppSelector } from "@/redux/hooks"
-import { getAllSuppliersAPI } from "@/redux/features/supplierSlice"
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import type { SupplierDto } from "@/types/supplier";
+import { useCallback, useEffect, useState } from "react";
+import { Search, Plus, Edit, Trash2, Mail, Phone } from "lucide-react";
+import { SupplierDialog } from "@/components/supplier-dialog";
+import { useAppDispatch, useAppSelector } from "@/redux/hooks";
+import {
+  addSupplierAPI,
+  getAllSuppliersAPI,
+} from "@/redux/features/supplierSlice";
 
 export default function SuppliersPage() {
-  const [searchTerm, setSearchTerm] = useState("")
-  const [isDialogOpen, setIsDialogOpen] = useState(false)
-  const [selectedSupplier, setSelectedSupplier] = useState<SupplierDto | null>(null)
-  const [suppliers, setSuppliers] = useState<SupplierDto[]>([]);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [selectedSupplier, setSelectedSupplier] = useState<SupplierDto | null>(
+    null
+  );
+  // const [suppliers, setSuppliers] = useState<SupplierDto[]>([]);
 
   const dispatch = useAppDispatch();
-  const suppliersData: SupplierDto[] = useAppSelector((state) => state.supplier.suppliersData) || [];
+  // const suppliersData: SupplierDto[] =
+  //   useAppSelector((state) => state.supplier.suppliersData) || [];
+   const { suppliersData, loading, error } = useAppSelector((state) => state.supplier);
 
   // Get All Suppliers
   useEffect(() => {
     dispatch(getAllSuppliersAPI());
-  },[dispatch])
+  }, [dispatch]);
 
-  useEffect(() => {
+  /*   useEffect(() => {
     setSuppliers(suppliersData)
-  },[suppliersData])
+  },[suppliersData]) */
 
-  const filteredSuppliers = suppliers.filter(
+  const filteredSuppliers = (suppliersData || []).filter(
     (supplier) =>
       supplier.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       supplier.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      supplier.contactNumber.includes(searchTerm),
-  )
+      supplier.contactNumber.includes(searchTerm)
+  );
 
   const handleAddEdit = (supplier: SupplierDto | null) => {
-    setSelectedSupplier(supplier)
-    setIsDialogOpen(true)
-  }
+    setSelectedSupplier(supplier);
+    setIsDialogOpen(true);
+  };
 
   const handleDelete = (id: number) => {
-    setSuppliers(suppliers.filter((s) => s.id !== id))
-  }
+    // setSuppliers(suppliersData.filter((s) => s.id !== id))
+  };
 
-  const handleSaveSupplier = (supplier: SupplierDto) => {
-    if (supplier.id) {      
-      // Update existing supplier
-      setSuppliers(suppliers.map((s) => (s.id === supplier.id ? supplier : s)))
-    } else {
-      // Add new supplier
-      const newSupplier = {
+  const handleSaveSupplier = async (supplier: SupplierDto) => {
+    try {
+      if (supplier.id) {
+        // Update existing supplier
+        // setSuppliers(suppliersData.map((s) => (s.id === supplier.id ? supplier : s)))
+      } else {
+        // Add new supplier
+        /* const newSupplier = {
         ...supplier,
         id: Math.max(...suppliers.map((s) => s.id || 0)) + 1,
       }
-      setSuppliers([...suppliers, newSupplier])
+      setSuppliers([...suppliers, newSupplier]) */
+
+        const result = await dispatch(addSupplierAPI(supplier)).unwrap();
+        console.log("after add result", result);
+      }
+    } catch (error) {
+      console.error("failed to save Supplier", error);
+    } finally {
+      setIsDialogOpen(false);
     }
-    setIsDialogOpen(false)
-  }
+  };
 
   return (
     <div className="flex flex-col gap-4">
@@ -73,7 +101,9 @@ export default function SuppliersPage() {
       <Card>
         <CardHeader>
           <CardTitle>Supplier Management</CardTitle>
-          <CardDescription>Manage your product suppliers and vendor relationships.</CardDescription>
+          <CardDescription>
+            Manage your product suppliers and vendor relationships.
+          </CardDescription>
         </CardHeader>
         <CardContent>
           <div className="flex flex-col gap-4">
@@ -93,7 +123,9 @@ export default function SuppliersPage() {
                 <TableHeader>
                   <TableRow>
                     <TableHead>Name</TableHead>
-                    <TableHead className="hidden md:table-cell">Email</TableHead>
+                    <TableHead className="hidden md:table-cell">
+                      Email
+                    </TableHead>
                     <TableHead>Contact Number</TableHead>
                     <TableHead className="text-right">Actions</TableHead>
                   </TableRow>
@@ -108,8 +140,12 @@ export default function SuppliersPage() {
                   ) : (
                     filteredSuppliers.map((supplier) => (
                       <TableRow key={supplier.id}>
-                        <TableCell className="font-medium">{supplier.name}</TableCell>
-                        <TableCell className="hidden md:table-cell">{supplier.email}</TableCell>
+                        <TableCell className="font-medium">
+                          {supplier.name}
+                        </TableCell>
+                        <TableCell className="hidden md:table-cell">
+                          {supplier.email}
+                        </TableCell>
                         <TableCell>{supplier.contactNumber}</TableCell>
                         <TableCell className="text-right">
                           <div className="flex justify-end gap-2">
@@ -125,11 +161,19 @@ export default function SuppliersPage() {
                                 <span className="sr-only">Call</span>
                               </a>
                             </Button>
-                            <Button variant="ghost" size="icon" onClick={() => handleAddEdit(supplier)}>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => handleAddEdit(supplier)}
+                            >
                               <Edit className="h-4 w-4" />
                               <span className="sr-only">Edit</span>
                             </Button>
-                            <Button variant="ghost" size="icon" onClick={() => handleDelete(supplier.id!)}>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => handleDelete(supplier.id!)}
+                            >
                               <Trash2 className="h-4 w-4" />
                               <span className="sr-only">Delete</span>
                             </Button>
@@ -152,5 +196,5 @@ export default function SuppliersPage() {
         onSave={handleSaveSupplier}
       />
     </div>
-  )
+  );
 }
