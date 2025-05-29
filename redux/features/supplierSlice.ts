@@ -62,6 +62,20 @@ export const addSupplierAPI = createAsyncThunk<
   }
 });
 
+//Update Supplier
+export const updateSupplierAPI = createAsyncThunk <ApiResponse<SupplierDto>,SupplierDto,
+{
+  rejectValue: {
+    mssage: string;
+    error: string;
+  }
+}>(
+  "updateSupplierAPI",
+  async (updatedSupplier, {rejectWithValue}) => {
+    
+  }
+)
+
 const supplierSlice = createSlice({
   name: "supplierSlice",
   initialState,

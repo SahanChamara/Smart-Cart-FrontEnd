@@ -26,3 +26,13 @@ export const addSupplier = async (
   apiObject.body = newSupplier;
   return ApiService.callApi<SupplierDto>(apiObject);
 };
+
+export const updateSupplier = async (updatedSupplier: SupplierDto): Promise<ApiResponse<SupplierDto>> => {
+  const apiObject: ApiConfig = {};
+  apiObject.method = 'PUT';
+  apiObject.authentication = true;
+  apiObject.prefix = "supplier";
+  apiObject.endpoint = `${updatedSupplier.id}`;
+  apiObject.body = updatedSupplier;
+  return ApiService.callApi<SupplierDto>(apiObject);
+}
