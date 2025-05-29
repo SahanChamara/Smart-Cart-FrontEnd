@@ -1,4 +1,4 @@
-import { getAllSuppliers, addSupplier } from "@/services/supplierService";
+import { getAllSuppliers, addSupplier, updateSupplier } from "@/services/supplierService";
 import { ApiResponse } from "@/types/ApiResponse";
 import { SupplierDto } from "@/types/supplier";
 import { createAsyncThunk, createSlice, PayloadAction } from "@reduxjs/toolkit";
@@ -29,7 +29,7 @@ export const getAllSuppliersAPI = createAsyncThunk<
 >("getAllSuppliersAPI", async (_, { rejectWithValue }) => {
   try {
     const result = await getAllSuppliers();
-    console.log("Fetch All Suppliers Response ->>> ",result);
+    console.log("Fetch All Suppliers Response ->>> ", result);
     return result;
   } catch (error: any) {
     return rejectWithValue({
@@ -63,24 +63,33 @@ export const addSupplierAPI = createAsyncThunk<
 });
 
 //Update Supplier
-export const updateSupplierAPI = createAsyncThunk <ApiResponse<SupplierDto>,SupplierDto,
-{
-  rejectValue: {
-    mssage: string;
-    error: string;
-  }
-}>(
-  "updateSupplierAPI",
-  async (updatedSupplier, {rejectWithValue}) => {
-    
-  }
-)
+export const updateSupplierAPI = createAsyncThunk<ApiResponse<SupplierDto>, SupplierDto,
+  {
+    rejectValue: {
+      message: string;
+      error: string;
+    }
+  }>(
+    "updateSupplierAPI",
+    async (updatedSupplier, { rejectWithValue }) => {
+      try {
+        const result = await updateSupplier(updatedSupplier);
+        console.log("Update supplier response ->>> ", result);
+        return result;
+      } catch (error: any) {
+        return rejectWithValue({
+          message: "Failed to update supplier",
+          error: error?.message ?? "Unkown error",
+        });
+      }
+    }
+  )
 
 const supplierSlice = createSlice({
   name: "supplierSlice",
   initialState,
   reducers: {
-    resetData: (state) => {},
+    resetData: (state) => { },
   },
   extraReducers: (builder) => {
     builder
@@ -106,12 +115,12 @@ const supplierSlice = createSlice({
         state.loading = true;
       })
       .addCase(addSupplierAPI.fulfilled, (state, action: PayloadAction<ApiResponse<SupplierDto>>) => {
-          state.loading = false;
-          if (action.payload.data) {
-            state.suppliersData = [...state.suppliersData, action.payload.data];
-          }
-          state.error = undefined;
-        })
+        state.loading = false;
+        if (action.payload.data) {
+          state.suppliersData = [...state.suppliersData, action.payload.data];
+        }
+        state.error = undefined;
+      })
       .addCase(addSupplierAPI.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload?.error;
