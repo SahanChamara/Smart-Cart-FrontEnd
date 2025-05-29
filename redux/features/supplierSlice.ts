@@ -89,19 +89,11 @@ const supplierSlice = createSlice({
       .addCase(addSupplierAPI.pending, (state) => {
         state.loading = true;
       })
-      .addCase(
-        addSupplierAPI.fulfilled,
-        (state, action: PayloadAction<ApiResponse<SupplierDto>>) => {
+      .addCase(addSupplierAPI.fulfilled, (state, action: PayloadAction<ApiResponse<SupplierDto>>) => {
           state.loading = false;
-          // state.suppliersData = action.payload.data ?? null;
-          if (action.payload.data) {
-            state.suppliersData = state.suppliersData
-              ? [...state.suppliersData, action.payload.data]
-              : [action.payload.data];
-          }
+          state.suppliersData = action.payload.data ? [action.payload.data] : [];
           state.error = undefined;
-        }
-      )
+        })
       .addCase(addSupplierAPI.rejected, (state, action) => {
         state.loading = true;
         state.error = action.payload?.error;

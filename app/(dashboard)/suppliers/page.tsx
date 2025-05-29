@@ -36,9 +36,9 @@ export default function SuppliersPage() {
   // const [suppliers, setSuppliers] = useState<SupplierDto[]>([]);
 
   const dispatch = useAppDispatch();
-  // const suppliersData: SupplierDto[] =
-  //   useAppSelector((state) => state.supplier.suppliersData) || [];
-   const { suppliersData, loading, error } = useAppSelector((state) => state.supplier);
+  const { suppliersData, loading, error } = useAppSelector(
+    (state) => state.supplier
+  );
 
   // Get All Suppliers
   useEffect(() => {
@@ -71,14 +71,8 @@ export default function SuppliersPage() {
         // Update existing supplier
         // setSuppliers(suppliersData.map((s) => (s.id === supplier.id ? supplier : s)))
       } else {
-        // Add new supplier
-        /* const newSupplier = {
-        ...supplier,
-        id: Math.max(...suppliers.map((s) => s.id || 0)) + 1,
-      }
-      setSuppliers([...suppliers, newSupplier]) */
-
         const result = await dispatch(addSupplierAPI(supplier)).unwrap();
+        await dispatch(getAllSuppliersAPI());
         console.log("after add result", result);
       }
     } catch (error) {
