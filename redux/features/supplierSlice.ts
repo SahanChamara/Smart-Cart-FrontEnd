@@ -29,7 +29,7 @@ export const getAllSuppliersAPI = createAsyncThunk<
 >("getAllSuppliersAPI", async (_, { rejectWithValue }) => {
   try {
     const result = await getAllSuppliers();
-    console.log(result);
+    console.log("Fetch All Suppliers Response ->>> ",result);
     return result;
   } catch (error: any) {
     return rejectWithValue({
@@ -52,7 +52,7 @@ export const addSupplierAPI = createAsyncThunk<
 >("addSupplierAPI", async (newSupplier, { rejectWithValue }) => {
   try {
     const result = await addSupplier(newSupplier);
-    console.log("new Supplier Add Response", result);
+    console.log("new Supplier Add Response ->>> ", result);
     return result;
   } catch (error: any) {
     return rejectWithValue({

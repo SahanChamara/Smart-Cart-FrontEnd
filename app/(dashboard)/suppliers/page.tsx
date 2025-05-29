@@ -26,6 +26,8 @@ import {
   addSupplierAPI,
   getAllSuppliersAPI,
 } from "@/redux/features/supplierSlice";
+import { toast } from "@/components/ui/use-toast";
+import { ToastAction } from "@/components/ui/toast";
 
 export default function SuppliersPage() {
   const [searchTerm, setSearchTerm] = useState("");
@@ -33,7 +35,6 @@ export default function SuppliersPage() {
   const [selectedSupplier, setSelectedSupplier] = useState<SupplierDto | null>(
     null
   );
-  // const [suppliers, setSuppliers] = useState<SupplierDto[]>([]);
 
   const dispatch = useAppDispatch();
   const { suppliersData, loading, error } = useAppSelector(
@@ -44,10 +45,6 @@ export default function SuppliersPage() {
   useEffect(() => {
     dispatch(getAllSuppliersAPI());
   }, [dispatch]);
-
-  /*   useEffect(() => {
-    setSuppliers(suppliersData)
-  },[suppliersData]) */
 
   const filteredSuppliers = (suppliersData || []).filter(
     (supplier) =>
@@ -62,67 +59,93 @@ export default function SuppliersPage() {
   };
 
   const handleDelete = (id: number) => {
-    // setSuppliers(suppliersData.filter((s) => s.id !== id))
+    // Delete implementation
   };
 
   const handleSaveSupplier = async (supplier: SupplierDto) => {
     try {
       if (supplier.id) {
         // Update existing supplier
-        // setSuppliers(suppliersData.map((s) => (s.id === supplier.id ? supplier : s)))
       } else {
         const result = await dispatch(addSupplierAPI(supplier)).unwrap();
-        if(result.status === 201 && result){
-          setSelectedSupplier(null);        
+        if (result.status === 201 && result) {
+          toast({
+            title: "Success!",
+            description: "Supplier has been added successfully.",
+            variant: "default",
+          });
+          setSelectedSupplier(null);
           await dispatch(getAllSuppliersAPI());
-        }        
+        }
       }
     } catch (error) {
-      console.error("failed to save Supplier", error);
+      console.error("Failed to save Supplier", error);
+      toast({
+        title: "Error",
+        description: "Failed to save supplier. Please try again.",
+        variant: "destructive",
+        action: (
+          <ToastAction
+            altText="Try again"
+            onClick={() => handleSaveSupplier(supplier)}
+          >
+            Try again
+          </ToastAction>
+        ),
+      });
     } finally {
       setIsDialogOpen(false);
     }
   };
 
   return (
-    <div className="flex flex-col gap-4">
-      <div className="flex items-center justify-between">
-        <h1 className="text-3xl font-bold tracking-tight">Suppliers</h1>
-        <Button onClick={() => handleAddEdit(null)}>
+    <div className="flex flex-col gap-4 p-4 md:p-6">
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+        <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">
+          Suppliers
+        </h1>
+        <Button
+          onClick={() => handleAddEdit(null)}
+          className="w-full md:w-auto"
+        >
           <Plus className="mr-2 h-4 w-4" />
           Add Supplier
         </Button>
       </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Supplier Management</CardTitle>
-          <CardDescription>
+      <Card className="overflow-hidden">
+        <CardHeader className="px-4 py-3 sm:px-6 sm:py-4">
+          <CardTitle className="text-lg sm:text-xl">
+            Supplier Management
+          </CardTitle>
+          <CardDescription className="text-sm sm:text-base">
             Manage your product suppliers and vendor relationships.
           </CardDescription>
         </CardHeader>
-        <CardContent>
+        <CardContent className="p-0 sm:p-6">
           <div className="flex flex-col gap-4">
-            <div className="relative">
-              <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-              <Input
-                type="search"
-                placeholder="Search suppliers..."
-                className="pl-8"
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-              />
+            <div className="px-4 pt-2 sm:px-0">
+              <div className="relative max-w-md">
+                <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                <Input
+                  type="search"
+                  placeholder="Search suppliers..."
+                  className="pl-8 w-full"
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                />
+              </div>
             </div>
 
-            <div className="rounded-md border">
-              <Table>
-                <TableHeader>
+            <div className="rounded-md border overflow-x-auto">
+              <Table className="min-w-full">
+                <TableHeader className="bg-muted/50">
                   <TableRow>
-                    <TableHead>Name</TableHead>
-                    <TableHead className="hidden md:table-cell">
+                    <TableHead className="w-[150px]">Name</TableHead>
+                    <TableHead className="hidden sm:table-cell">
                       Email
                     </TableHead>
-                    <TableHead>Contact Number</TableHead>
+                    <TableHead>Contact</TableHead>
                     <TableHead className="text-right">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
@@ -135,42 +158,60 @@ export default function SuppliersPage() {
                     </TableRow>
                   ) : (
                     filteredSuppliers.map((supplier) => (
-                      <TableRow key={supplier.id}>
-                        <TableCell className="font-medium">
+                      <TableRow key={supplier.id} className="hover:bg-muted/50">
+                        <TableCell className="font-medium py-3">
                           {supplier.name}
                         </TableCell>
-                        <TableCell className="hidden md:table-cell">
-                          {supplier.email}
+                        <TableCell className="hidden sm:table-cell py-3">
+                          <a href={`mailto:${supplier.email}`}>
+                            {supplier.email}
+                          </a>
                         </TableCell>
-                        <TableCell>{supplier.contactNumber}</TableCell>
-                        <TableCell className="text-right">
-                          <div className="flex justify-end gap-2">
-                            <Button variant="ghost" size="icon" asChild>
+                        <TableCell className="py-3">
+                          <a href={`tel:${supplier.contactNumber}`}>
+                            {supplier.contactNumber}
+                          </a>
+                        </TableCell>
+                        <TableCell className="py-3">
+                          <div className="flex justify-end gap-1 sm:gap-2">
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-8 w-8 sm:h-9 sm:w-9"
+                              asChild
+                            >
                               <a href={`mailto:${supplier.email}`}>
-                                <Mail className="h-4 w-4" />
+                                <Mail className="h-3 w-3 sm:h-4 sm:w-4" />
                                 <span className="sr-only">Email</span>
                               </a>
                             </Button>
-                            <Button variant="ghost" size="icon" asChild>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-8 w-8 sm:h-9 sm:w-9"
+                              asChild
+                            >
                               <a href={`tel:${supplier.contactNumber}`}>
-                                <Phone className="h-4 w-4" />
+                                <Phone className="h-3 w-3 sm:h-4 sm:w-4" />
                                 <span className="sr-only">Call</span>
                               </a>
                             </Button>
                             <Button
                               variant="ghost"
                               size="icon"
+                              className="h-8 w-8 sm:h-9 sm:w-9"
                               onClick={() => handleAddEdit(supplier)}
                             >
-                              <Edit className="h-4 w-4" />
+                              <Edit className="h-3 w-3 sm:h-4 sm:w-4" />
                               <span className="sr-only">Edit</span>
                             </Button>
                             <Button
                               variant="ghost"
                               size="icon"
+                              className="h-8 w-8 sm:h-9 sm:w-9"
                               onClick={() => handleDelete(supplier.id!)}
                             >
-                              <Trash2 className="h-4 w-4" />
+                              <Trash2 className="h-3 w-3 sm:h-4 sm:w-4 text-destructive" />
                               <span className="sr-only">Delete</span>
                             </Button>
                           </div>
