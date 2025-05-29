@@ -72,6 +72,7 @@ export default function SuppliersPage() {
         // setSuppliers(suppliersData.map((s) => (s.id === supplier.id ? supplier : s)))
       } else {
         const result = await dispatch(addSupplierAPI(supplier)).unwrap();
+        setSelectedSupplier(null);
         await dispatch(getAllSuppliersAPI());
         console.log("after add result", result);
       }

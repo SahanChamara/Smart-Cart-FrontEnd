@@ -31,16 +31,20 @@ export function SupplierDialog({ open, onOpenChange, supplier, onSave }: Supplie
   })
 
   useEffect(() => {
-    if (supplier) {
-      setFormData(supplier)
-    } else {
+    if (open) {
+      setFormData(supplier || {
+        name: "",
+        contactNumber: "",
+        email: "",
+      })
+    } /* else {
       setFormData({
         name: "",
         contactNumber: "",
         email: "",
       })
-    }
-  }, [supplier])
+    } */
+  }, [open,supplier])
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target
