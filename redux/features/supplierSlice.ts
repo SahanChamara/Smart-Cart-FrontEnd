@@ -70,6 +70,7 @@ const supplierSlice = createSlice({
   },
   extraReducers: (builder) => {
     builder
+      // Get all suppliers
       .addCase(getAllSuppliersAPI.pending, (state) => {
         state.loading = true;
       })
@@ -82,20 +83,23 @@ const supplierSlice = createSlice({
         }
       )
       .addCase(getAllSuppliersAPI.rejected, (state, action) => {
-        state.loading = true;
+        state.loading = false;
         state.error = action.payload?.error ?? undefined;
       })
 
+      // Add new Supplier
       .addCase(addSupplierAPI.pending, (state) => {
         state.loading = true;
       })
       .addCase(addSupplierAPI.fulfilled, (state, action: PayloadAction<ApiResponse<SupplierDto>>) => {
           state.loading = false;
-          state.suppliersData = action.payload.data ? [action.payload.data] : [];
+          if (action.payload.data) {
+            state.suppliersData = [...state.suppliersData, action.payload.data];
+          }
           state.error = undefined;
         })
       .addCase(addSupplierAPI.rejected, (state, action) => {
-        state.loading = true;
+        state.loading = false;
         state.error = action.payload?.error;
       });
   },

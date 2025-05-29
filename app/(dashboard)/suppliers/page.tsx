@@ -72,9 +72,10 @@ export default function SuppliersPage() {
         // setSuppliers(suppliersData.map((s) => (s.id === supplier.id ? supplier : s)))
       } else {
         const result = await dispatch(addSupplierAPI(supplier)).unwrap();
-        setSelectedSupplier(null);
-        await dispatch(getAllSuppliersAPI());
-        console.log("after add result", result);
+        if(result.status === 201 && result){
+          setSelectedSupplier(null);        
+          await dispatch(getAllSuppliersAPI());
+        }        
       }
     } catch (error) {
       console.error("failed to save Supplier", error);
