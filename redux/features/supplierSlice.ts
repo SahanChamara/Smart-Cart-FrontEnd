@@ -2,6 +2,7 @@ import { getAllSuppliers, addSupplier, updateSupplier } from "@/services/supplie
 import { ApiResponse } from "@/types/ApiResponse";
 import { SupplierDto } from "@/types/supplier";
 import { createAsyncThunk, createSlice, PayloadAction } from "@reduxjs/toolkit";
+import { Payload } from "recharts/types/component/DefaultLegendContent";
 import { string } from "yup";
 
 type SupplierState = {
@@ -124,7 +125,25 @@ const supplierSlice = createSlice({
       .addCase(addSupplierAPI.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload?.error;
-      });
+      })
+
+      // Update Supplier
+      .addCase(updateSupplierAPI.pending, (state) => {
+        state.loading = true;
+      })
+      .addCase(updateSupplierAPI.fulfilled, (state, action:PayloadAction<ApiResponse<SupplierDto>>) => {
+        state.loading = false;
+        if (action.payload.data) {
+          state.suppliersData = state.suppliersData.map((supplier) =>
+            supplier.id === action.payload.data!.id ? action.payload.data! : supplier
+          );
+        }
+        state.error = undefined;
+      })
+      .addCase(updateSupplierAPI.rejected, (state, action) => {
+        state.loading = true;
+        state.error = action.payload?.error;
+      })
   },
 });
 
