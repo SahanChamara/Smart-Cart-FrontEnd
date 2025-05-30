@@ -69,13 +69,13 @@ export default function SuppliersPage() {
       } else {
         const result = await dispatch(addSupplierAPI(supplier)).unwrap();
         if (result.status === 201 && result) {
+          setSelectedSupplier(null);
+          await dispatch(getAllSuppliersAPI());
           toast({
             title: "Success!",
             description: "Supplier has been added successfully.",
             variant: "default",
           });
-          setSelectedSupplier(null);
-          await dispatch(getAllSuppliersAPI());
         }
       }
     } catch (error) {
