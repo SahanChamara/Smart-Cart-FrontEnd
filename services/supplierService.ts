@@ -36,3 +36,13 @@ export const updateSupplier = async (updatedSupplier: SupplierDto): Promise<ApiR
   apiObject.body = updatedSupplier;
   return ApiService.callApi<SupplierDto>(apiObject);
 }
+
+export const deleteSupplier = async (supplierId: number): Promise<ApiResponse<Object>> => {
+  const apiObject: ApiConfig = {};
+  apiObject.method = "DELETE";
+  apiObject.authentication = true;
+  apiObject.prefix = "supplier";
+  apiObject.endpoint = `${supplierId}`;
+  apiObject.body = null;
+  return ApiService.callApi<Object>(apiObject);
+}
