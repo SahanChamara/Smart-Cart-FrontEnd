@@ -190,7 +190,7 @@ export function ProductDialog({
                         {filteredSuppliers.map((supplier) => (
                           <CommandItem
                             key={supplier.id}
-                            value={(supplier.id ?? "").toString()}
+                            value={`${supplier.name} ${supplier.contactNumber} ${supplier.email}`}
                             onSelect={() => supplier.id !== undefined && handleSupplierSelect(supplier.id)}
                             className="flex items-center justify-between"
                           >
