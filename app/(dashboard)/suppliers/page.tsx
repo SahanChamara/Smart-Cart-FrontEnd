@@ -24,6 +24,7 @@ import { SupplierDialog } from "@/components/supplier-dialog";
 import { useAppDispatch, useAppSelector } from "@/redux/hooks";
 import {
   addSupplierAPI,
+  deleteSupplierAPI,
   getAllSuppliersAPI,
   updateSupplierAPI,
 } from "@/redux/features/supplierSlice";
@@ -60,10 +61,23 @@ export default function SuppliersPage() {
     setIsDialogOpen(true);
   };
 
-  const handleDelete = (supplier: SupplierDto) => {
-    console.log(supplier);
-
-    
+  const handleDelete = async (supplier: SupplierDto) => {
+    if (supplier.id !== undefined) {
+      const result = await dispatch(deleteSupplierAPI(supplier.id));
+      console.log("Delete Supplier response ->> ", result);
+      if (
+        result.payload !== undefined &&
+        typeof (result.payload as any).status === "number" &&
+        (result.payload as any).status === 201
+      ) {
+        toast.success("Supplier Delete Succesfull", {
+          description: "Success",
+        });
+        dispatch(getAllSuppliersAPI());
+      }
+    } else {
+      console.error("Supplier id is undefined, cannot delete.");
+    }
   };
 
   const handleSaveSupplier = async (supplier: SupplierDto) => {
