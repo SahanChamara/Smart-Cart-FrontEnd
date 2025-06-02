@@ -1,6 +1,6 @@
 import React from "react";
 import { ThemeProvider } from "@/components/theme-provider";
-import { Toaster } from "@/components/ui/toaster";
+import { Toaster } from "@/components/ui/sonner";
 import { ReduxProvider } from "@/redux/provider";
 import { Inter } from "next/font/google";
 import "./globals.css";
@@ -22,14 +22,12 @@ export default function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
-          <ToastProvider>
-            <ReduxProvider>
-              {children}
-              <React.Suspense fallback={null}>
-                <Toaster />
-              </React.Suspense>
-            </ReduxProvider>
-          </ToastProvider>
+          <ReduxProvider>
+            {children}
+            <React.Suspense fallback={null}>
+              <Toaster />
+            </React.Suspense>
+          </ReduxProvider>
         </ThemeProvider>
       </body>
     </html>
