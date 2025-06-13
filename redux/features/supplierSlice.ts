@@ -1,7 +1,13 @@
-import { getAllSuppliers, addSupplier, updateSupplier } from "@/services/supplierService";
+import {
+  getAllSuppliers,
+  addSupplier,
+  updateSupplier,
+  deleteSupplier,
+} from "@/services/supplierService";
 import { ApiResponse } from "@/types/ApiResponse";
 import { SupplierDto } from "@/types/supplier";
 import { createAsyncThunk, createSlice, PayloadAction } from "@reduxjs/toolkit";
+import { Payload } from "recharts/types/component/DefaultLegendContent";
 import { string } from "yup";
 
 type SupplierState = {
@@ -63,33 +69,56 @@ export const addSupplierAPI = createAsyncThunk<
 });
 
 //Update Supplier
-export const updateSupplierAPI = createAsyncThunk<ApiResponse<SupplierDto>, SupplierDto,
+export const updateSupplierAPI = createAsyncThunk<
+  ApiResponse<SupplierDto>,
+  SupplierDto,
   {
     rejectValue: {
       message: string;
       error: string;
-    }
-  }>(
-    "updateSupplierAPI",
-    async (updatedSupplier, { rejectWithValue }) => {
-      try {
-        const result = await updateSupplier(updatedSupplier);
-        console.log("Update supplier response ->>> ", result);
-        return result;
-      } catch (error: any) {
-        return rejectWithValue({
-          message: "Failed to update supplier",
-          error: error?.message ?? "Unkown error",
-        });
-      }
-    }
-  )
+    };
+  }
+>("updateSupplierAPI", async (updatedSupplier, { rejectWithValue }) => {
+  try {
+    const result = await updateSupplier(updatedSupplier);
+    console.log("Update supplier response ->>> ", result);
+    return result;
+  } catch (error: any) {
+    return rejectWithValue({
+      message: "Failed to update supplier",
+      error: error?.message ?? "Unkown error",
+    });
+  }
+});
+
+// Delete Supplier
+export const deleteSupplierAPI = createAsyncThunk<
+  ApiResponse<Object>,
+  number,
+  {
+    rejectValue: {
+      message: string;
+      error: string;
+    };
+  }
+>("deleteSupplierAPI", async (supplierId, { rejectWithValue }) => {
+  try {
+    const result = await deleteSupplier(supplierId);
+    console.log("Delete Supplier response ->> ", result);
+    return result;
+  } catch (error: any) {
+    return rejectWithValue({
+      message: "Failed to delete Supplier",
+      error: error?.message ?? "Unknown Error",
+    });
+  }
+});
 
 const supplierSlice = createSlice({
   name: "supplierSlice",
   initialState,
   reducers: {
-    resetData: (state) => { },
+    resetData: (state) => {},
   },
   extraReducers: (builder) => {
     builder
@@ -114,17 +143,58 @@ const supplierSlice = createSlice({
       .addCase(addSupplierAPI.pending, (state) => {
         state.loading = true;
       })
-      .addCase(addSupplierAPI.fulfilled, (state, action: PayloadAction<ApiResponse<SupplierDto>>) => {
-        state.loading = false;
-        if (action.payload.data) {
-          state.suppliersData = [...state.suppliersData, action.payload.data];
+      .addCase(
+        addSupplierAPI.fulfilled,
+        (state, action: PayloadAction<ApiResponse<SupplierDto>>) => {
+          state.loading = false;
+          if (action.payload.data) {
+            state.suppliersData = [...state.suppliersData, action.payload.data];
+          }
+          state.error = undefined;
         }
-        state.error = undefined;
-      })
+      )
       .addCase(addSupplierAPI.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload?.error;
-      });
+      })
+
+      // Update Supplier
+      .addCase(updateSupplierAPI.pending, (state) => {
+        state.loading = true;
+      })
+      .addCase(
+        updateSupplierAPI.fulfilled,
+        (state, action: PayloadAction<ApiResponse<SupplierDto>>) => {
+          state.loading = false;
+          if (action.payload.data) {
+            state.suppliersData = state.suppliersData.map((supplier) =>
+              supplier.id === action.payload.data!.id
+                ? action.payload.data!
+                : supplier
+            );
+          }
+          state.error = undefined;
+        }
+      )
+      .addCase(updateSupplierAPI.rejected, (state, action) => {
+        state.loading = true;
+        state.error = action.payload?.error;
+      })
+
+      // Delete Supplier
+      .addCase(deleteSupplierAPI.pending, (state) => {
+        state.loading = true;        
+      })
+      .addCase(deleteSupplierAPI.fulfilled, (state, action: PayloadAction<ApiResponse<Object>>) => {
+        state.loading = false;
+        const supplierId = action.payload.data
+        state.suppliersData = state.suppliersData.filter((supplier) => supplier.id !== supplierId);
+        state.error = undefined;
+      })
+      .addCase(deleteSupplierAPI.rejected, (state, action) => {
+        state.loading = true;
+        state.error = action.payload?.error;
+      })
   },
 });
 

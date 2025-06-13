@@ -24,10 +24,13 @@ import { SupplierDialog } from "@/components/supplier-dialog";
 import { useAppDispatch, useAppSelector } from "@/redux/hooks";
 import {
   addSupplierAPI,
+  deleteSupplierAPI,
   getAllSuppliersAPI,
+  updateSupplierAPI,
 } from "@/redux/features/supplierSlice";
-import { toast } from "@/components/ui/use-toast";
 import { ToastAction } from "@/components/ui/toast";
+import { toast } from "sonner";
+import { DeleteConfirmationModal } from "@/components/DeleteConfirmationModal";
 
 export default function SuppliersPage() {
   const [searchTerm, setSearchTerm] = useState("");
@@ -58,21 +61,40 @@ export default function SuppliersPage() {
     setIsDialogOpen(true);
   };
 
-  const handleDelete = (id: number) => {
-    // Delete implementation
+  const handleDelete = async (supplier: SupplierDto) => {
+    if (supplier.id !== undefined) {
+      const result = await dispatch(deleteSupplierAPI(supplier.id));
+      console.log("Delete Supplier response ->> ", result);
+      if (
+        result.payload !== undefined &&
+        typeof (result.payload as any).status === "number" &&
+        (result.payload as any).status === 201
+      ) {
+        toast.success("Supplier Delete Succesfull", {
+          description: "Success",
+        });
+        dispatch(getAllSuppliersAPI());
+      }
+    } else {
+      console.error("Supplier id is undefined, cannot delete.");
+    }
   };
 
   const handleSaveSupplier = async (supplier: SupplierDto) => {
     try {
       if (supplier.id) {
-        // Update existing supplier
+        const result = await dispatch(updateSupplierAPI(supplier)).unwrap();
+        if (result.status === 200 && result) {
+          toast.success("Supplier has been updated Successfull", {
+            description: "Success",
+          });
+          dispatch(getAllSuppliersAPI());
+        }
       } else {
         const result = await dispatch(addSupplierAPI(supplier)).unwrap();
         if (result.status === 201 && result) {
-          toast({
-            title: "Success!",
-            description: "Supplier has been added successfully.",
-            variant: "default",
+          toast.success("Suppplier has been added successfullly", {
+            description: "Success",
           });
           setSelectedSupplier(null);
           await dispatch(getAllSuppliersAPI());
@@ -80,18 +102,14 @@ export default function SuppliersPage() {
       }
     } catch (error) {
       console.error("Failed to save Supplier", error);
-      toast({
-        title: "Error",
-        description: "Failed to save supplier. Please try again.",
-        variant: "destructive",
-        action: (
-          <ToastAction
-            altText="Try again"
-            onClick={() => handleSaveSupplier(supplier)}
-          >
-            Try again
-          </ToastAction>
-        ),
+      toast.error("Failed to save Supplier. Please try again", {
+        description: "Error",
+        action: {
+          label: "Try again",
+          onClick: () => {
+            void handleSaveSupplier(supplier);
+          },
+        },
       });
     } finally {
       setIsDialogOpen(false);
@@ -205,15 +223,20 @@ export default function SuppliersPage() {
                               <Edit className="h-3 w-3 sm:h-4 sm:w-4" />
                               <span className="sr-only">Edit</span>
                             </Button>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              className="h-8 w-8 sm:h-9 sm:w-9"
-                              onClick={() => handleDelete(supplier.id!)}
+                            <DeleteConfirmationModal
+                              deleteObject={supplier.name}
+                              onConfirm={() => handleDelete(supplier)}
+                              isLoading={loading}
                             >
-                              <Trash2 className="h-3 w-3 sm:h-4 sm:w-4 text-destructive" />
-                              <span className="sr-only">Delete</span>
-                            </Button>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-8 w-8 sm:h-9 sm:w-9"
+                              >
+                                <Trash2 className="h-3 w-3 sm:h-4 sm:w-4 text-destructive" />
+                                <span className="sr-only">Delete</span>
+                              </Button>
+                            </DeleteConfirmationModal>
                           </div>
                         </TableCell>
                       </TableRow>
