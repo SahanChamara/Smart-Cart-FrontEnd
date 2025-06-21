@@ -5,51 +5,27 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/ui/input"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import type { CustomerDto } from "@/types/customer"
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Search, Plus, Edit, Trash2 } from "lucide-react"
 import { CustomerDialog } from "@/components/customer-dialog"
+import { useDispatch, useSelector } from "react-redux"
+import { AppDispatch, RootState } from "@/redux/store"
+import { getAllCustomersAPI, addCustomerAPI, updateCustomerAPI, deleteCustomerAPI } from "@/redux/features/customerSlice"
 
 export default function CustomersPage() {
+  const dispatch = useDispatch<AppDispatch>()
+  const { customersData: customers, loading, error } = useSelector((state: RootState) => state.customer)
+
   const [searchTerm, setSearchTerm] = useState("")
   const [isDialogOpen, setIsDialogOpen] = useState(false)
   const [selectedCustomer, setSelectedCustomer] = useState<CustomerDto | null>(null)
 
-  // Mock data for demonstration
-  const [customers, setCustomers] = useState<CustomerDto[]>([
-    {
-      id: 1,
-      name: "John Doe",
-      phoneNumber: "0712345678",
-      loyaltyPoints: 150,
-    },
-    {
-      id: 2,
-      name: "Jane Smith",
-      phoneNumber: "0723456789",
-      loyaltyPoints: 75,
-    },
-    {
-      id: 3,
-      name: "Robert Johnson",
-      phoneNumber: "0734567890",
-      loyaltyPoints: 200,
-    },
-    {
-      id: 4,
-      name: "Emily Davis",
-      phoneNumber: "0745678901",
-      loyaltyPoints: 50,
-    },
-    {
-      id: 5,
-      name: "Michael Wilson",
-      phoneNumber: "0756789012",
-      loyaltyPoints: 125,
-    },
-  ])
+  useEffect(() => {
+    dispatch(getAllCustomersAPI())
+  }, [dispatch])
 
   const filteredCustomers = customers.filter(
-    (customer) =>
+    (customer: { name: string; phoneNumber: string | string[] }) =>
       customer.name.toLowerCase().includes(searchTerm.toLowerCase()) || customer.phoneNumber.includes(searchTerm),
   )
 
@@ -59,21 +35,14 @@ export default function CustomersPage() {
   }
 
   const handleDelete = (id: number) => {
-    setCustomers(customers.filter((c) => c.id !== id))
+    dispatch(deleteCustomerAPI(id))
   }
 
   const handleSaveCustomer = (customer: CustomerDto) => {
     if (customer.id) {
-      // Update existing customer
-      setCustomers(customers.map((c) => (c.id === customer.id ? customer : c)))
+      dispatch(updateCustomerAPI(customer))
     } else {
-      // Add new customer
-      const newCustomer = {
-        ...customer,
-        id: Math.max(...customers.map((c) => c.id || 0)) + 1,
-        loyaltyPoints: 0,
-      }
-      setCustomers([...customers, newCustomer])
+      dispatch(addCustomerAPI(customer))
     }
     setIsDialogOpen(false)
   }
@@ -117,32 +86,46 @@ export default function CustomersPage() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {filteredCustomers.length === 0 ? (
+                  {loading ? (
+                    <TableRow>
+                      <TableCell colSpan={4} className="h-24 text-center">
+                        Loading...
+                      </TableCell>
+                    </TableRow>
+                  ) : error ? (
+                    <TableRow>
+                      <TableCell colSpan={4} className="h-24 text-center text-red-500">
+                        {error}
+                      </TableCell>
+                    </TableRow>
+                  ) : filteredCustomers.length === 0 ? (
                     <TableRow>
                       <TableCell colSpan={4} className="h-24 text-center">
                         No customers found.
                       </TableCell>
                     </TableRow>
                   ) : (
-                    filteredCustomers.map((customer) => (
-                      <TableRow key={customer.id}>
-                        <TableCell className="font-medium">{customer.name}</TableCell>
-                        <TableCell>{customer.phoneNumber}</TableCell>
-                        <TableCell className="text-right">{customer.loyaltyPoints}</TableCell>
-                        <TableCell className="text-right">
-                          <div className="flex justify-end gap-2">
-                            <Button variant="ghost" size="icon" onClick={() => handleAddEdit(customer)}>
-                              <Edit className="h-4 w-4" />
-                              <span className="sr-only">Edit</span>
-                            </Button>
-                            <Button variant="ghost" size="icon" onClick={() => handleDelete(customer.id!)}>
-                              <Trash2 className="h-4 w-4" />
-                              <span className="sr-only">Delete</span>
-                            </Button>
-                          </div>
-                        </TableCell>
-                      </TableRow>
-                    ))
+                    filteredCustomers
+                      .filter((customer: CustomerDto | null): customer is CustomerDto => customer !== null)
+                      .map((customer: CustomerDto) => (
+                        <TableRow key={customer.id}>
+                          <TableCell className="font-medium">{customer.name}</TableCell>
+                          <TableCell>{customer.phoneNumber}</TableCell>
+                          <TableCell className="text-right">{customer.loyaltyPoints}</TableCell>
+                          <TableCell className="text-right">
+                            <div className="flex justify-end gap-2">
+                              <Button variant="ghost" size="icon" onClick={() => handleAddEdit(customer)}>
+                                <Edit className="h-4 w-4" />
+                                <span className="sr-only">Edit</span>
+                              </Button>
+                              <Button variant="ghost" size="icon" onClick={() => handleDelete(customer.id!)}>
+                                <Trash2 className="h-4 w-4" />
+                                <span className="sr-only">Delete</span>
+                              </Button>
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      ))
                   )}
                 </TableBody>
               </Table>
