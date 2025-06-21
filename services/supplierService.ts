@@ -3,7 +3,7 @@ import { ApiResponse } from "@/types/ApiResponse";
 import { SupplierDto } from "@/types/supplier";
 import ApiService from "./api/api-service";
 
-export const getAllSuppliers = async (): Promise<
+export const getAllSuppliers = (): Promise<
   ApiResponse<SupplierDto[]>
 > => {
   const apiObject: ApiConfig = {};
@@ -15,7 +15,7 @@ export const getAllSuppliers = async (): Promise<
   return ApiService.callApi<SupplierDto[]>(apiObject);
 };
 
-export const addSupplier = async (
+export const addSupplier = (
   newSupplier: SupplierDto
 ): Promise<ApiResponse<SupplierDto>> => {
   const apiObject: ApiConfig = {};
@@ -27,7 +27,7 @@ export const addSupplier = async (
   return ApiService.callApi<SupplierDto>(apiObject);
 };
 
-export const updateSupplier = async (updatedSupplier: SupplierDto): Promise<ApiResponse<SupplierDto>> => {
+export const updateSupplier = (updatedSupplier: SupplierDto): Promise<ApiResponse<SupplierDto>> => {
   const apiObject: ApiConfig = {};
   apiObject.method = 'PUT';
   apiObject.authentication = true;
@@ -37,7 +37,7 @@ export const updateSupplier = async (updatedSupplier: SupplierDto): Promise<ApiR
   return ApiService.callApi<SupplierDto>(apiObject);
 }
 
-export const deleteSupplier = async (supplierId: number): Promise<ApiResponse<Object>> => {
+export const deleteSupplier = (supplierId: number): Promise<ApiResponse<Object>> => {
   const apiObject: ApiConfig = {};
   apiObject.method = "DELETE";
   apiObject.authentication = true;

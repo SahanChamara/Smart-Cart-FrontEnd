@@ -127,8 +127,7 @@ const supplierSlice = createSlice({
         state.loading = true;
       })
       .addCase(
-        getAllSuppliersAPI.fulfilled,
-        (state, action: PayloadAction<ApiResponse<SupplierDto[]>>) => {
+        getAllSuppliersAPI.fulfilled, (state, action: PayloadAction<ApiResponse<SupplierDto[]>>) => {
           state.loading = false;
           state.suppliersData = action.payload?.data ?? [];
           state.error = undefined;

@@ -7,7 +7,7 @@ export const getAllCustomers = async (): Promise<ApiResponse<CustomerDto[]>> => 
   const apiObject: ApiConfig = {};
   apiObject.method = "GET";
   apiObject.authentication = true;
-  apiObject.prefix = "customers";
+  apiObject.prefix = "customer";
   apiObject.endpoint = "";
   apiObject.body = null;
   return ApiService.callApi<CustomerDto[]>(apiObject);
@@ -17,7 +17,7 @@ export const addCustomer = async (newCustomer: CustomerDto): Promise<ApiResponse
   const apiObject: ApiConfig = {};
   apiObject.method = "POST";
   apiObject.authentication = true;
-  apiObject.prefix = "customers";
+  apiObject.prefix = "customer";
   apiObject.endpoint = "";
   apiObject.body = newCustomer;
   return ApiService.callApi<CustomerDto>(apiObject);
@@ -27,7 +27,7 @@ export const updateCustomer = async (updatedCustomer: CustomerDto): Promise<ApiR
   const apiObject: ApiConfig = {};
   apiObject.method = "PUT";
   apiObject.authentication = true;
-  apiObject.prefix = "customers";
+  apiObject.prefix = "customer";
   apiObject.endpoint = `${updatedCustomer.id}`;
   apiObject.body = updatedCustomer;
   return ApiService.callApi<CustomerDto>(apiObject);
@@ -37,7 +37,7 @@ export const deleteCustomer = async (id: number): Promise<ApiResponse<string>> =
   const apiObject: ApiConfig = {};
   apiObject.method = "DELETE";
   apiObject.authentication = true;
-  apiObject.prefix = "customers";
+  apiObject.prefix = "customer";
   apiObject.endpoint = `${id}`;
   apiObject.body = null;
   return ApiService.callApi<string>(apiObject);
