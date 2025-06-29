@@ -18,8 +18,8 @@ import { format } from "date-fns"
 import { useAppDispatch, useAppSelector } from "@/redux/hooks"
 import { RootState } from "@/redux/store"
 import { getAllProductsAPI } from "@/redux/features/productSlice"
-import { UserDto } from "@/types/auth"
 import { addInventoryLogAPI } from "@/redux/features/inventorySlice"
+import { toast } from "sonner"
 
 export default function InventoryPage() {
   const dispatch = useAppDispatch();
@@ -28,10 +28,6 @@ export default function InventoryPage() {
     loading: boolean;
     error: string | null;
   });
-  const {user} = useAppSelector((state: RootState) => state.auth as {
-    user: UserDto;
-  });  
-
   const [searchTerm, setSearchTerm] = useState("")
   const [categoryFilter, setCategoryFilter] = useState("all")
   const [stockFilter, setStockFilter] = useState("all")
@@ -199,13 +195,14 @@ export default function InventoryPage() {
       productId,
       changeAmount,
       reason,
-      updatedById: user.id,
-      timestamp: Date.now().toString(),
+      updatedById: localStorage.getItem('user') !== null ? Number(localStorage.getItem('user')) : undefined,
     } 
 
     const result = await dispatch(addInventoryLogAPI(adjustInventory)).unwrap();
     console.log("inventory added result", result);
-    
+    if(result.success){
+      toast.success("Inventory Log Added Successfully");
+    }    
     setIsDialogOpen(false)
   }
 

@@ -3,6 +3,5 @@ export interface InventoryLogDto {
   productId: number
   changeAmount: number
   reason: string
-  timestamp: string
   updatedById?: number
 }
