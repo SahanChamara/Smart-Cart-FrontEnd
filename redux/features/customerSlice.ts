@@ -89,8 +89,7 @@ const customerSlice = createSlice({
         state.loading = true;
       })
       .addCase(
-        getAllCustomersAPI.fulfilled,
-        (state, action: PayloadAction<ApiResponse<CustomerDto[]>>) => {
+        getAllCustomersAPI.fulfilled, (state, action: PayloadAction<ApiResponse<CustomerDto[]>>) => {
           state.loading = false;
           state.customersData = action.payload?.data ?? [];
           state.error = undefined;
