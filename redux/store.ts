@@ -3,6 +3,7 @@ import authSlice from "@/redux/features/authSlice";
 import supplierSlice from "@/redux/features/supplierSlice"
 import productSlice from "./features/productSlice";
 import customerSlice from "./features/customerSlice";
+import inventorySlice from "./features/inventorySlice";
 
 export const store = configureStore({
   reducer: {
@@ -10,6 +11,7 @@ export const store = configureStore({
     supplier: supplierSlice,
     product: productSlice,
     customer: customerSlice,
+    inventory: inventorySlice,
   },
 })
 

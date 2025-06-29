@@ -18,6 +18,8 @@ import { format } from "date-fns"
 import { useAppDispatch, useAppSelector } from "@/redux/hooks"
 import { RootState } from "@/redux/store"
 import { getAllProductsAPI } from "@/redux/features/productSlice"
+import { UserDto } from "@/types/auth"
+import { addInventoryLogAPI } from "@/redux/features/inventorySlice"
 
 export default function InventoryPage() {
   const dispatch = useAppDispatch();
@@ -26,6 +28,9 @@ export default function InventoryPage() {
     loading: boolean;
     error: string | null;
   });
+  const {user} = useAppSelector((state: RootState) => state.auth as {
+    user: UserDto;
+  });  
 
   const [searchTerm, setSearchTerm] = useState("")
   const [categoryFilter, setCategoryFilter] = useState("all")
@@ -98,7 +103,7 @@ export default function InventoryPage() {
   ]) */
 
   const [inventoryLogs] = useState<InventoryLogDto[]>([
-    {
+    /* {
       id: 1,
       productId: 1,
       changeAmount: 50,
@@ -145,7 +150,7 @@ export default function InventoryPage() {
       reason: "Expired products",
       timestamp: new Date(2023, 11, 30, 16, 0).toISOString(),
       updatedById: 3,
-    },
+    }, */
   ])
 
   const categories = ["all", ...Array.from(new Set(productsData.map((p) => p.category)))]
@@ -186,9 +191,21 @@ export default function InventoryPage() {
     setIsDialogOpen(true)
   }
 
-  const handleSaveAdjustment = (productId: number, changeAmount: number, reason: string) => {
+  const handleSaveAdjustment = async (productId: number, changeAmount: number, reason: string) => {
     // In a real app, this would call an API to update the inventory
     console.log(`Adjusting inventory for product ${productId}: ${changeAmount} units. Reason: ${reason}`)
+
+    const adjustInventory: InventoryLogDto = {
+      productId,
+      changeAmount,
+      reason,
+      updatedById: user.id,
+      timestamp: Date.now().toString(),
+    } 
+
+    const result = await dispatch(addInventoryLogAPI(adjustInventory)).unwrap();
+    console.log("inventory added result", result);
+    
     setIsDialogOpen(false)
   }
 
