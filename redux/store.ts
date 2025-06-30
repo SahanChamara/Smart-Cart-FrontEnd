@@ -4,6 +4,7 @@ import supplierSlice from "@/redux/features/supplierSlice"
 import productSlice from "./features/productSlice";
 import customerSlice from "./features/customerSlice";
 import inventorySlice from "./features/inventorySlice";
+import discountSlice from "./features/discountSlice";
 
 export const store = configureStore({
   reducer: {
@@ -12,6 +13,7 @@ export const store = configureStore({
     product: productSlice,
     customer: customerSlice,
     inventory: inventorySlice,
+    discount: discountSlice,
   },
 })
 
@@ -19,3 +21,4 @@ export type RootState = ReturnType<typeof store.getState>
 export type AppDispatch = typeof store.dispatch
 export type ProductSliceState = ReturnType<typeof productSlice>
 export type CustomerSliceState = ReturnType<typeof customerSlice>;
+export type DiscountSliceState = ReturnType<typeof discountSlice>;
