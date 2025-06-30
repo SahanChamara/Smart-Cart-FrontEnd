@@ -39,6 +39,7 @@ export const loginUserAPI = createAsyncThunk<
     console.log("Login Response ->> ",response);
 
     if (response.success && response.data) {
+      localStorage.setItem('user', String(response.data.user.id ?? ""));
       localStorage.setItem("secure_access", response.data.token);
       return response.data;
     }

@@ -7,9 +7,9 @@ export const addInventory = async (newInventoryLog: InventoryLogDto): Promise<Ap
     const apiObject: ApiConfig = {
         method: "POST",
         authentication: true,
-        prefix: "inventory",
+        prefix: "inventory-log",
         endpoint: "",
         body: newInventoryLog,
     }
-    return ApiService.callApi(apiObject);
+    return ApiService.callApi<InventoryLogDto>(apiObject);
 };
