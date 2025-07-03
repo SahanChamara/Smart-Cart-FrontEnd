@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import type { InventoryLogDto } from "@/types/inventory"
 import type { ProductDto } from "@/types/product"
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { Search, Plus, ArrowUp, ArrowDown } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
@@ -15,8 +15,19 @@ import { InventoryAdjustmentDialog } from "@/components/inventory-adjustment-dia
 import { DatePickerWithRange } from "@/components/date-range-picker"
 import type { DateRange } from "react-day-picker"
 import { format } from "date-fns"
+import { useAppDispatch, useAppSelector } from "@/redux/hooks"
+import { RootState } from "@/redux/store"
+import { getAllProductsAPI } from "@/redux/features/productSlice"
+import { addInventoryLogAPI } from "@/redux/features/inventorySlice"
+import { toast } from "sonner"
 
 export default function InventoryPage() {
+  const dispatch = useAppDispatch();
+  const { productsData, loading, error } = useAppSelector((state: RootState) => state.product as {
+    productsData: ProductDto[];
+    loading: boolean;
+    error: string | null;
+  });
   const [searchTerm, setSearchTerm] = useState("")
   const [categoryFilter, setCategoryFilter] = useState("all")
   const [stockFilter, setStockFilter] = useState("all")
@@ -24,8 +35,12 @@ export default function InventoryPage() {
   const [isDialogOpen, setIsDialogOpen] = useState(false)
   const [selectedProduct, setSelectedProduct] = useState<ProductDto | null>(null)
 
+  useEffect(() => {
+    dispatch(getAllProductsAPI());
+  }, [dispatch]);
+
   // Mock data for demonstration
-  const [products] = useState<ProductDto[]>([
+  /* const [products] = useState<ProductDto[]>([
     {
       id: 1,
       name: "Milk 1L",
@@ -81,10 +96,10 @@ export default function InventoryPage() {
       expiryDate: new Date(2023, 11, 31).toISOString(),
       supplierId: 2,
     },
-  ])
+  ]) */
 
   const [inventoryLogs] = useState<InventoryLogDto[]>([
-    {
+    /* {
       id: 1,
       productId: 1,
       changeAmount: 50,
@@ -131,12 +146,12 @@ export default function InventoryPage() {
       reason: "Expired products",
       timestamp: new Date(2023, 11, 30, 16, 0).toISOString(),
       updatedById: 3,
-    },
+    }, */
   ])
 
-  const categories = ["all", ...Array.from(new Set(products.map((p) => p.category)))]
+  const categories = ["all", ...Array.from(new Set(productsData.map((p) => p.category)))]
 
-  const filteredProducts = products
+  const filteredProducts = productsData
     .filter(
       (product) =>
         product.name.toLowerCase().includes(searchTerm.toLowerCase()) || product.barcode.includes(searchTerm),
@@ -153,7 +168,7 @@ export default function InventoryPage() {
   const filteredLogs = inventoryLogs
     .filter((log) => {
       if (searchTerm) {
-        const product = products.find((p) => p.id === log.productId)
+        const product = productsData.find((p) => p.id === log.productId)
         return product?.name.toLowerCase().includes(searchTerm.toLowerCase())
       }
       return true
@@ -172,14 +187,27 @@ export default function InventoryPage() {
     setIsDialogOpen(true)
   }
 
-  const handleSaveAdjustment = (productId: number, changeAmount: number, reason: string) => {
+  const handleSaveAdjustment = async (productId: number, changeAmount: number, reason: string) => {
     // In a real app, this would call an API to update the inventory
     console.log(`Adjusting inventory for product ${productId}: ${changeAmount} units. Reason: ${reason}`)
+
+    const adjustInventory: InventoryLogDto = {
+      productId,
+      changeAmount,
+      reason,
+      updatedById: localStorage.getItem('user') !== null ? Number(localStorage.getItem('user')) : undefined,
+    } 
+
+    const result = await dispatch(addInventoryLogAPI(adjustInventory)).unwrap();
+    console.log("inventory added result", result);
+    if(result.success){
+      toast.success("Inventory Log Added Successfully");
+    }    
     setIsDialogOpen(false)
   }
 
   const getProductName = (productId: number) => {
-    return products.find((p) => p.id === productId)?.name || "Unknown Product"
+    return productsData.find((p) => p.id === productId)?.name || "Unknown Product"
   }
 
   return (
@@ -254,7 +282,13 @@ export default function InventoryPage() {
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {filteredProducts.length === 0 ? (
+                      {loading === true ? (
+                        <TableRow>
+                          <TableCell colSpan={5} className="h-24 text-center">
+                            loading
+                          </TableCell>
+                        </TableRow>
+                      ) : (filteredProducts.length === 0 ? (
                         <TableRow>
                           <TableCell colSpan={5} className="h-24 text-center">
                             No products found.
@@ -300,7 +334,8 @@ export default function InventoryPage() {
                             </TableCell>
                           </TableRow>
                         ))
-                      )}
+                      ))}
+                      
                     </TableBody>
                   </Table>
                 </div>
@@ -388,7 +423,7 @@ export default function InventoryPage() {
         onOpenChange={setIsDialogOpen}
         product={selectedProduct}
         onSave={handleSaveAdjustment}
-        products={products}
+        products={productsData}
       />
     </div>
   )
