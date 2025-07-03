@@ -5,7 +5,7 @@ import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/componen
 import { Input } from "@/components/ui/input"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import type { ProductDto } from "@/types/product"
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { Search, Plus, Minus, Trash2, CreditCard, Banknote } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
@@ -14,6 +14,9 @@ import { CustomerSearchDialog } from "@/components/customer-search-dialog"
 import { PaymentDialog } from "@/components/payment-dialog"
 import { useToast } from "@/components/ui/use-toast"
 import { useRouter } from "next/navigation"
+import { useAppDispatch, useAppSelector } from "@/redux/hooks"
+import { RootState } from "@/redux/store"
+import { getAllProductsAPI } from "@/redux/features/productSlice"
 
 interface CartItem {
   product: ProductDto
@@ -21,6 +24,7 @@ interface CartItem {
 }
 
 export default function POSPage() {
+  const dispatch = useAppDispatch();
   const router = useRouter()
   const { toast } = useToast()
   const [searchTerm, setSearchTerm] = useState("")
@@ -29,65 +33,17 @@ export default function POSPage() {
   const [isCustomerDialogOpen, setIsCustomerDialogOpen] = useState(false)
   const [isPaymentDialogOpen, setIsPaymentDialogOpen] = useState(false)
   const [selectedCustomer, setSelectedCustomer] = useState<{ id: number; name: string } | null>(null)
+  const { productsData, loading, error } = useAppSelector((state: RootState) => state.product as {
+    productsData: ProductDto[];
+    loading: boolean;
+    error: string | null;
+  })
 
-  // Mock data for demonstration
-  const [products] = useState<ProductDto[]>([
-    {
-      id: 1,
-      name: "Milk 1L",
-      barcode: "8901234567890",
-      category: "Dairy",
-      quantity: 50,
-      costPrice: 120,
-      sellingPrice: 150,
-      expiryDate: new Date(2023, 11, 31).toISOString(),
-      supplierId: 1,
-    },
-    {
-      id: 2,
-      name: "Bread",
-      barcode: "8901234567891",
-      category: "Bakery",
-      quantity: 30,
-      costPrice: 80,
-      sellingPrice: 100,
-      expiryDate: new Date(2023, 11, 25).toISOString(),
-      supplierId: 2,
-    },
-    {
-      id: 3,
-      name: "Coca Cola 1.5L",
-      barcode: "8901234567892",
-      category: "Beverages",
-      quantity: 100,
-      costPrice: 90,
-      sellingPrice: 120,
-      expiryDate: new Date(2024, 5, 30).toISOString(),
-      supplierId: 3,
-    },
-    {
-      id: 4,
-      name: "Rice 5kg",
-      barcode: "8901234567893",
-      category: "Grains",
-      quantity: 25,
-      costPrice: 500,
-      sellingPrice: 550,
-      expiryDate: new Date(2024, 11, 31).toISOString(),
-      supplierId: 1,
-    },
-    {
-      id: 5,
-      name: "Chocolate Bar",
-      barcode: "8901234567894",
-      category: "Confectionery",
-      quantity: 75,
-      costPrice: 50,
-      sellingPrice: 80,
-      expiryDate: new Date(2023, 11, 31).toISOString(),
-      supplierId: 2,
-    },
-  ])
+  useEffect(() => {
+    dispatch(getAllProductsAPI());
+  },[dispatch]);
+
+  const [products] = useState<ProductDto[]>(productsData)
 
   const categories = ["all", ...Array.from(new Set(products.map((p) => p.category)))]
 
@@ -111,7 +67,15 @@ export default function POSPage() {
     })
   }
 
-  const updateCartItemQuantity = (productId: number, newQuantity: number) => {
+  const updateCartItemQuantity = (productId: number, newQuantity: number, stockQuantity: number) => {
+    if(newQuantity > stockQuantity){
+      console.log("stock quantity",stockQuantity);
+      
+       toast({
+      title: "No Stock",
+      description: `Enough Stoc in this Item`,
+    })      
+    }
     if (newQuantity <= 0) {
       removeFromCart(productId)
       return
@@ -257,7 +221,7 @@ export default function POSPage() {
                             variant="ghost"
                             size="icon"
                             className="h-6 w-6"
-                            onClick={() => updateCartItemQuantity(item.product.id!, item.quantity - 1)}
+                            onClick={() => updateCartItemQuantity(item.product.id!, item.quantity - 1, item.product.quantity)}
                           >
                             <Minus className="h-3 w-3" />
                             <span className="sr-only">Decrease</span>
@@ -267,7 +231,7 @@ export default function POSPage() {
                             variant="ghost"
                             size="icon"
                             className="h-6 w-6"
-                            onClick={() => updateCartItemQuantity(item.product.id!, item.quantity + 1)}
+                            onClick={() => updateCartItemQuantity(item.product.id!, item.quantity + 1, item.product.quantity)}
                           >
                             <Plus className="h-3 w-3" />
                             <span className="sr-only">Increase</span>
