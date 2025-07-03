@@ -41,4 +41,4 @@ export const deleteCustomer = async (id: number): Promise<ApiResponse<string>> =
   apiObject.endpoint = `${id}`;
   apiObject.body = null;
   return ApiService.callApi<string>(apiObject);
-};
+};   
