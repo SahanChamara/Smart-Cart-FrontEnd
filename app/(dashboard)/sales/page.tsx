@@ -5,7 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/ui/input"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import type { SaleDto } from "@/types/sale"
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Search, Plus, Eye, Printer } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
@@ -13,68 +13,24 @@ import { DatePickerWithRange } from "@/components/date-range-picker"
 import type { DateRange } from "react-day-picker"
 import { format } from "date-fns"
 import { useRouter } from "next/navigation"
+import { useDispatch, useSelector } from "react-redux"
+import { RootState, AppDispatch } from "@/redux/store"
+import { getAllSalesAPI } from "@/redux/features/salesSlice"
 
 export default function SalesPage() {
   const router = useRouter()
   const [searchTerm, setSearchTerm] = useState("")
   const [paymentFilter, setPaymentFilter] = useState("all")
-  const [dateRange, setDateRange] = useState<DateRange | undefined>()
+  const [dateRange, setDateRange] = useState<DateRange | undefined>(undefined)
 
-  // Mock data for demonstration
-  const [sales] = useState<SaleDto[]>([
-    {
-      id: 1,
-      saleTime: new Date(2023, 10, 15, 14, 30).toISOString(),
-      cashierId: 1,
-      customerId: 1,
-      totalAmount: 450,
-      discount: 0,
-      paidAmount: 450,
-      paymentType: "CASH",
-    },
-    {
-      id: 2,
-      saleTime: new Date(2023, 10, 15, 16, 45).toISOString(),
-      cashierId: 2,
-      customerId: 2,
-      totalAmount: 780,
-      discount: 50,
-      paidAmount: 730,
-      paymentType: "CARD",
-    },
-    {
-      id: 3,
-      saleTime: new Date(2023, 10, 16, 10, 15).toISOString(),
-      cashierId: 1,
-      customerId: 3,
-      totalAmount: 320,
-      discount: 0,
-      paidAmount: 320,
-      paymentType: "CASH",
-    },
-    {
-      id: 4,
-      saleTime: new Date(2023, 10, 16, 13, 20).toISOString(),
-      cashierId: 3,
-      customerId: 4,
-      totalAmount: 1250,
-      discount: 100,
-      paidAmount: 1150,
-      paymentType: "CARD",
-    },
-    {
-      id: 5,
-      saleTime: new Date(2023, 10, 17, 9, 30).toISOString(),
-      cashierId: 2,
-      customerId: 5,
-      totalAmount: 550,
-      discount: 0,
-      paidAmount: 550,
-      paymentType: "CASH",
-    },
-  ])
+  const dispatch = useDispatch<AppDispatch>()
+  const { salesData, loading, error } = useSelector((state: RootState) => state.sales)
 
-  const filteredSales = sales
+  useEffect(() => {
+    dispatch(getAllSalesAPI())
+  }, [dispatch])
+
+  const filteredSales = salesData
     .filter((sale) => sale.id?.toString().includes(searchTerm))
     .filter((sale) => paymentFilter === "all" || sale.paymentType === paymentFilter)
     .filter((sale) => {
@@ -145,14 +101,26 @@ export default function SalesPage() {
                   <TableRow>
                     <TableHead>Sale ID</TableHead>
                     <TableHead>Date & Time</TableHead>
-                    <TableHead className="hidden md:table-cell">Customer ID</TableHead>
+                    <TableHead className="hidden md:table-cell_Destroy">Customer ID</TableHead>
                     <TableHead>Payment</TableHead>
                     <TableHead className="text-right">Amount</TableHead>
                     <TableHead className="text-right">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {filteredSales.length === 0 ? (
+                  {loading ? (
+                    <TableRow>
+                      <TableCell colSpan={6} className="h-24 text-center">
+                        Loading...
+                      </TableCell>
+                    </TableRow>
+                  ) : error ? (
+                    <TableRow>
+                      <TableCell colSpan={6} className="h-24 text-center text-red-500">
+                        {error}
+                      </TableCell>
+                    </TableRow>
+                  ) : filteredSales.length === 0 ? (
                     <TableRow>
                       <TableCell colSpan={6} className="h-24 text-center">
                         No sales found.
