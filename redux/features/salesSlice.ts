@@ -1,7 +1,7 @@
 import { createAsyncThunk, createSlice, PayloadAction } from "@reduxjs/toolkit";
 import { ApiResponse } from "@/types/ApiResponse";
-import { SaleDto } from "@/types/sale";
-import { getAllSales, createSale, updateSale, deleteSale } from "@/services/salesService";
+import { SaleDto, SaleItemDto } from "@/types/sale";
+import { getAllSales, createSale, createSaleItem, updateSale, deleteSale } from "@/services/salesService";
 
 type SalesState = {
   salesData: SaleDto[];
@@ -42,6 +42,22 @@ export const createSaleAPI = createAsyncThunk<
   } catch (error: any) {
     return rejectWithValue({
       message: "Failed to create sale",
+      error: error?.message ?? "Unknown error",
+    });
+  }
+});
+
+export const createSaleItemAPI = createAsyncThunk<
+  ApiResponse<SaleItemDto>,
+  SaleItemDto,
+  { rejectValue: { message: string; error: string } }
+>("createSaleItemAPI", async (newSaleItem, { rejectWithValue }) => {
+  try {
+    const result = await createSaleItem(newSaleItem);
+    return result;
+  } catch (error: any) {
+    return rejectWithValue({
+      message: "Failed to create sale item",
       error: error?.message ?? "Unknown error",
     });
   }
@@ -113,15 +129,26 @@ const salesSlice = createSlice({
         state.loading = false;
         state.error = action.payload?.error;
       })
+      .addCase(createSaleItemAPI.pending, (state) => {
+        state.loading = true;
+      })
+      .addCase(createSaleItemAPI.fulfilled, (state) => {
+        state.loading = false;
+        state.error = undefined;
+      })
+      .addCase(createSaleItemAPI.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload?.error;
+      })
       .addCase(updateSaleAPI.pending, (state) => {
         state.loading = true;
       })
       .addCase(updateSaleAPI.fulfilled, (state, action: PayloadAction<ApiResponse<SaleDto>>) => {
         state.loading = false;
-        if (action.payload.data) {
-          const index = state.salesData.findIndex((s) => s.id === action.payload.id);
+        if (action.payload.data !== undefined) {
+          const index = state.salesData.findIndex((s) => s.id === action.payload.data!.id);
           if (index !== -1) {
-            state.salesData[index] = action.payload.data;
+            state.salesData[index] = action.payload.data!;
           }
         }
         state.error = undefined;
