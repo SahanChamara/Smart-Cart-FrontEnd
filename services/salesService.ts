@@ -1,6 +1,6 @@
 import { ApiConfig } from "@/types/ApiConfig";
 import { ApiResponse } from "@/types/ApiResponse";
-import { SaleDto } from "@/types/sale";
+import { SaleDto, SaleItemDto } from "@/types/sale";
 import ApiService from "./api/api-service";
 
 export const getAllSales = async (): Promise<ApiResponse<SaleDto[]>> => {
@@ -34,6 +34,17 @@ export const createSale = async (newSale: SaleDto): Promise<ApiResponse<SaleDto>
     body: newSale,
   };
   return ApiService.callApi<SaleDto>(apiObject);
+};
+
+export const createSaleItem = async (newSaleItem: SaleItemDto): Promise<ApiResponse<SaleItemDto>> => {
+  const apiObject: ApiConfig = {
+    method: "POST",
+    authentication: true,
+    prefix: "sale-item",
+    endpoint: "",
+    body: newSaleItem,
+  };
+  return ApiService.callApi<SaleItemDto>(apiObject);
 };
 
 export const updateSale = async (updatedSale: SaleDto): Promise<ApiResponse<SaleDto>> => {
