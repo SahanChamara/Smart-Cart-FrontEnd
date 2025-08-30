@@ -5,6 +5,7 @@ import productSlice from "./features/productSlice";
 import customerSlice from "./features/customerSlice";
 import inventorySlice from "./features/inventorySlice";
 import discountSlice from "./features/discountSlice";
+import salesSlice from "./features/salesSlice";
 
 export const store = configureStore({
   reducer: {
@@ -14,11 +15,13 @@ export const store = configureStore({
     customer: customerSlice,
     inventory: inventorySlice,
     discount: discountSlice,
+    sales: salesSlice,
   },
 })
 
 export type RootState = ReturnType<typeof store.getState>
 export type AppDispatch = typeof store.dispatch
 export type ProductSliceState = ReturnType<typeof productSlice>
-export type CustomerSliceState = ReturnType<typeof customerSlice>;
-export type DiscountSliceState = ReturnType<typeof discountSlice>;
+export type CustomerSliceState = ReturnType<typeof customerSlice>
+export type DiscountSliceState = ReturnType<typeof discountSlice>
+export type SalesSliceState = ReturnType<typeof salesSlice>

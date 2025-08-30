@@ -5,7 +5,9 @@ import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/componen
 import { Input } from "@/components/ui/input"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import type { ProductDto } from "@/types/product"
-import { useState } from "react"
+import type { SaleDto, SaleItemDto } from "@/types/sale"
+import type { InventoryLogDto } from "@/types/inventory"
+import { useState, useEffect } from "react"
 import { Search, Plus, Minus, Trash2, CreditCard, Banknote } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
@@ -14,6 +16,11 @@ import { CustomerSearchDialog } from "@/components/customer-search-dialog"
 import { PaymentDialog } from "@/components/payment-dialog"
 import { useToast } from "@/components/ui/use-toast"
 import { useRouter } from "next/navigation"
+import { useDispatch, useSelector } from "react-redux"
+import { AppDispatch, RootState } from "@/redux/store"
+import { getAllProductsAPI } from "../../../redux/features/productSlice"
+import { createSaleAPI, createSaleItemAPI } from "../../../redux/features/salesSlice"
+import { addInventoryLogAPI } from "@/../../redux/features/inventorySlice"
 
 interface CartItem {
   product: ProductDto
@@ -23,6 +30,10 @@ interface CartItem {
 export default function POSPage() {
   const router = useRouter()
   const { toast } = useToast()
+  const dispatch = useDispatch<AppDispatch>()
+  const { productsData, loading: productsLoading, error: productsError } = useSelector((state: RootState) => state.product)
+  const { loading: salesLoading } = useSelector((state: RootState) => state.sales)
+  const { loading: inventoryLoading } = useSelector((state: RootState) => state.inventory)
   const [searchTerm, setSearchTerm] = useState("")
   const [categoryFilter, setCategoryFilter] = useState("all")
   const [cart, setCart] = useState<CartItem[]>([])
@@ -30,68 +41,13 @@ export default function POSPage() {
   const [isPaymentDialogOpen, setIsPaymentDialogOpen] = useState(false)
   const [selectedCustomer, setSelectedCustomer] = useState<{ id: number; name: string } | null>(null)
 
-  // Mock data for demonstration
-  const [products] = useState<ProductDto[]>([
-    {
-      id: 1,
-      name: "Milk 1L",
-      barcode: "8901234567890",
-      category: "Dairy",
-      quantity: 50,
-      costPrice: 120,
-      sellingPrice: 150,
-      expiryDate: new Date(2023, 11, 31).toISOString(),
-      supplierId: 1,
-    },
-    {
-      id: 2,
-      name: "Bread",
-      barcode: "8901234567891",
-      category: "Bakery",
-      quantity: 30,
-      costPrice: 80,
-      sellingPrice: 100,
-      expiryDate: new Date(2023, 11, 25).toISOString(),
-      supplierId: 2,
-    },
-    {
-      id: 3,
-      name: "Coca Cola 1.5L",
-      barcode: "8901234567892",
-      category: "Beverages",
-      quantity: 100,
-      costPrice: 90,
-      sellingPrice: 120,
-      expiryDate: new Date(2024, 5, 30).toISOString(),
-      supplierId: 3,
-    },
-    {
-      id: 4,
-      name: "Rice 5kg",
-      barcode: "8901234567893",
-      category: "Grains",
-      quantity: 25,
-      costPrice: 500,
-      sellingPrice: 550,
-      expiryDate: new Date(2024, 11, 31).toISOString(),
-      supplierId: 1,
-    },
-    {
-      id: 5,
-      name: "Chocolate Bar",
-      barcode: "8901234567894",
-      category: "Confectionery",
-      quantity: 75,
-      costPrice: 50,
-      sellingPrice: 80,
-      expiryDate: new Date(2023, 11, 31).toISOString(),
-      supplierId: 2,
-    },
-  ])
+  useEffect(() => {
+    dispatch(getAllProductsAPI())
+  }, [dispatch])
 
-  const categories = ["all", ...Array.from(new Set(products.map((p) => p.category)))]
+  const categories = ["all", ...Array.from(new Set(productsData.map((p) => p.category)))]
 
-  const filteredProducts = products
+  const filteredProducts = productsData
     .filter(
       (product) =>
         product.name.toLowerCase().includes(searchTerm.toLowerCase()) || product.barcode.includes(searchTerm),
@@ -99,9 +55,25 @@ export default function POSPage() {
     .filter((product) => categoryFilter === "all" || product.category === categoryFilter)
 
   const addToCart = (product: ProductDto) => {
+    if (product.quantity <= 0) {
+      toast({
+        title: "Out of Stock",
+        description: `${product.name} is out of stock.`,
+        variant: "destructive",
+      })
+      return
+    }
     setCart((prevCart) => {
       const existingItem = prevCart.find((item) => item.product.id === product.id)
       if (existingItem) {
+        if (existingItem.quantity + 1 > product.quantity) {
+          toast({
+            title: "Stock Limit",
+            description: `Cannot add more ${product.name}. Only ${product.quantity} in stock.`,
+            variant: "destructive",
+          })
+          return prevCart
+        }
         return prevCart.map((item) =>
           item.product.id === product.id ? { ...item, quantity: item.quantity + 1 } : item,
         )
@@ -112,8 +84,20 @@ export default function POSPage() {
   }
 
   const updateCartItemQuantity = (productId: number, newQuantity: number) => {
+    const product = productsData.find((p) => p.id === productId)
+    if (!product) return
+
     if (newQuantity <= 0) {
       removeFromCart(productId)
+      return
+    }
+
+    if (newQuantity > product.quantity) {
+      toast({
+        title: "Stock Limit",
+        description: `Cannot set quantity to ${newQuantity} for ${product.name}. Only ${product.quantity} in stock.`,
+        variant: "destructive",
+      })
       return
     }
 
@@ -136,25 +120,92 @@ export default function POSPage() {
     setIsCustomerDialogOpen(false)
   }
 
-  const handlePaymentComplete = (paymentType: string) => {
-    toast({
-      title: "Sale completed",
-      description: `Payment of $${calculateTotal().toFixed(2)} received via ${paymentType}`,
-    })
-    clearCart()
-    router.push("/dashboard")
-  }
-
   const calculateSubtotal = () => {
     return cart.reduce((sum, item) => sum + item.product.sellingPrice * item.quantity, 0)
   }
 
   const calculateTax = () => {
-    return calculateSubtotal() * 0.1 // 10% tax
+    return calculateSubtotal() * 0.18 // 18% VAT for Sri Lanka
   }
 
   const calculateTotal = () => {
     return calculateSubtotal() + calculateTax()
+  }
+
+  const handlePaymentComplete = async (paymentType: "CASH" | "CARD") => {
+    if (!selectedCustomer) {
+      toast({
+        title: "No Customer Selected",
+        description: "Please select a customer before completing the sale.",
+        variant: "destructive",
+      })
+      return
+    }
+
+    if (cart.length === 0) {
+      toast({
+        title: "Empty Cart",
+        description: "Please add items to the cart before completing the sale.",
+        variant: "destructive",
+      })
+      return
+    }
+
+    try {
+      // Create Sale
+      const sale: SaleDto = {
+        saleTime: new Date().toISOString(),
+        cashierId: 1, // Replace with actual cashier ID from auth state
+        customerId: selectedCustomer.id,
+        totalAmount: calculateTotal(),
+        discount: 0, // Add discount logic if needed
+        paidAmount: calculateTotal(),
+        paymentType,
+      }
+
+      const saleResult = await dispatch(createSaleAPI(sale)).unwrap()
+
+      if (saleResult.data?.id) {
+        // Create Sale Items
+        const saleItems: SaleItemDto[] = cart.map((item) => ({
+          saleId: saleResult.data?.id ?? 0,
+          productId: item.product.id!,
+          quantity: item.quantity,
+          pricePerUnit: item.product.sellingPrice,
+          totalPrice: item.product.sellingPrice * item.quantity,
+        }))
+
+        for (const item of saleItems) {
+          await dispatch(createSaleItemAPI(item)).unwrap()
+        }
+
+        // Update Inventory
+        const inventoryLogs: InventoryLogDto[] = cart.map((item) => ({
+          productId: item.product.id!,
+          changeAmount: -item.quantity,
+          reason: `Sale #${saleResult.data?.id ?? ""}`,
+          updatedById: 1, // Replace with actual cashier ID
+        }))
+
+        for (const log of inventoryLogs) {
+          await dispatch(addInventoryLogAPI(log)).unwrap()
+        }
+
+        toast({
+          title: "Sale Completed",
+          description: `Payment of LKR ${calculateTotal().toFixed(2)} received via ${paymentType}`,
+        })
+
+        clearCart()
+        router.push("/dashboard")
+      }
+    } catch (error: any) {
+      toast({
+        title: "Sale Failed",
+        description: error.message || "An error occurred while processing the sale.",
+        variant: "destructive",
+      })
+    }
   }
 
   return (
@@ -191,24 +242,31 @@ export default function POSPage() {
               </Select>
             </div>
 
-            <div className="grid grid-cols-2 gap-2 md:grid-cols-3 lg:grid-cols-2 xl:grid-cols-3">
-              {filteredProducts.map((product) => (
-                <Button
-                  key={product.id}
-                  variant="outline"
-                  className="h-auto flex-col items-start justify-between p-4 text-left"
-                  onClick={() => addToCart(product)}
-                >
-                  <div className="space-y-1">
-                    <h3 className="font-medium">{product.name}</h3>
-                    <Badge variant="outline" className="text-xs">
-                      {product.category}
-                    </Badge>
-                  </div>
-                  <div className="text-sm font-medium text-primary">${product.sellingPrice.toFixed(2)}</div>
-                </Button>
-              ))}
-            </div>
+            {productsLoading ? (
+              <div className="text-center">Loading products...</div>
+            ) : productsError ? (
+              <div className="text-center text-red-500">{productsError}</div>
+            ) : (
+              <div className="grid grid-cols-2 gap-2 md:grid-cols-3 lg:grid-cols-2 xl:grid-cols-3">
+                {filteredProducts.map((product) => (
+                  <Button
+                    key={product.id}
+                    variant="outline"
+                    className="h-auto flex-col items-start justify-between p-4 text-left"
+                    onClick={() => addToCart(product)}
+                    disabled={product.quantity <= 0}
+                  >
+                    <div className="space-y-1">
+                      <h3 className="font-medium">{product.name}</h3>
+                      <Badge variant="outline" className="text-xs">
+                        {product.category}
+                      </Badge>
+                    </div>
+                    <div className="text-sm font-medium text-primary">LKR {product.sellingPrice.toFixed(2)}</div>
+                  </Button>
+                ))}
+              </div>
+            )}
           </CardContent>
         </Card>
       </div>
@@ -219,7 +277,7 @@ export default function POSPage() {
           <CardHeader>
             <div className="flex items-center justify-between">
               <CardTitle>Current Sale</CardTitle>
-              <Button variant="ghost" size="sm" onClick={clearCart}>
+              <Button variant="ghost" size="sm" onClick={clearCart} disabled={salesLoading || inventoryLoading}>
                 Clear
               </Button>
             </div>
@@ -258,6 +316,7 @@ export default function POSPage() {
                             size="icon"
                             className="h-6 w-6"
                             onClick={() => updateCartItemQuantity(item.product.id!, item.quantity - 1)}
+                            disabled={salesLoading || inventoryLoading}
                           >
                             <Minus className="h-3 w-3" />
                             <span className="sr-only">Decrease</span>
@@ -268,6 +327,7 @@ export default function POSPage() {
                             size="icon"
                             className="h-6 w-6"
                             onClick={() => updateCartItemQuantity(item.product.id!, item.quantity + 1)}
+                            disabled={salesLoading || inventoryLoading}
                           >
                             <Plus className="h-3 w-3" />
                             <span className="sr-only">Increase</span>
@@ -275,7 +335,7 @@ export default function POSPage() {
                         </div>
                       </TableCell>
                       <TableCell className="text-right">
-                        ${(item.product.sellingPrice * item.quantity).toFixed(2)}
+                        LKR {(item.product.sellingPrice * item.quantity).toFixed(2)}
                       </TableCell>
                       <TableCell>
                         <Button
@@ -283,6 +343,7 @@ export default function POSPage() {
                           size="icon"
                           className="h-6 w-6"
                           onClick={() => removeFromCart(item.product.id!)}
+                          disabled={salesLoading || inventoryLoading}
                         >
                           <Trash2 className="h-3 w-3" />
                           <span className="sr-only">Remove</span>
@@ -297,16 +358,16 @@ export default function POSPage() {
             <div className="mt-4 space-y-2">
               <div className="flex justify-between">
                 <span>Subtotal</span>
-                <span>${calculateSubtotal().toFixed(2)}</span>
+                <span>LKR {calculateSubtotal().toFixed(2)}</span>
               </div>
               <div className="flex justify-between">
-                <span>Tax (10%)</span>
-                <span>${calculateTax().toFixed(2)}</span>
+                <span>VAT (18%)</span>
+                <span>LKR {calculateTax().toFixed(2)}</span>
               </div>
               <Separator />
               <div className="flex justify-between font-bold">
                 <span>Total</span>
-                <span>${calculateTotal().toFixed(2)}</span>
+                <span>LKR {calculateTotal().toFixed(2)}</span>
               </div>
             </div>
           </CardContent>
@@ -315,13 +376,17 @@ export default function POSPage() {
               <Button
                 variant="outline"
                 className="w-full"
-                disabled={cart.length === 0}
-                onClick={() => setIsPaymentDialogOpen(true)}
+                disabled={cart.length === 0 || salesLoading || inventoryLoading}
+                onClick={() => handlePaymentComplete("CASH")}
               >
                 <Banknote className="mr-2 h-4 w-4" />
                 Cash
               </Button>
-              <Button className="w-full" disabled={cart.length === 0} onClick={() => setIsPaymentDialogOpen(true)}>
+              <Button
+                className="w-full"
+                disabled={cart.length === 0 || salesLoading || inventoryLoading}
+                onClick={() => handlePaymentComplete("CARD")}
+              >
                 <CreditCard className="mr-2 h-4 w-4" />
                 Card
               </Button>
@@ -339,8 +404,9 @@ export default function POSPage() {
       <PaymentDialog
         open={isPaymentDialogOpen}
         onOpenChange={setIsPaymentDialogOpen}
-        total={calculateTotal()}
-        onComplete={handlePaymentComplete}
+        total={calculateTotal()} onComplete={function (paymentType: string): void {
+          throw new Error("Function not implemented.")
+        } }        //onComplete={handlePaymentComplete}
       />
     </div>
   )
